@@ -5,9 +5,10 @@ import java.util.logging.Logger;
 
 import src.main.model.Picture;
 import src.main.service.ExifToolService;
+import src.main.util.CustomLogger;
 
 public class ExifToolServiceTest {
-	private static final Logger log = Logger.getGlobal();
+	private static final Logger log = CustomLogger.getGlobal();
 	public static ExifToolService exifToolService = ExifToolService.getInstance();
 	
 	public static void main(String[] args) {

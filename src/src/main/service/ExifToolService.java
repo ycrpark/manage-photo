@@ -8,9 +8,10 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import src.main.model.Picture;
+import src.main.util.CustomLogger;
 
 public class ExifToolService {
-	private static final Logger log = Logger.getGlobal();
+	private static final Logger log = CustomLogger.getGlobal();
 	
 	// exiftool.exe path
 	private final String appPath = "C:\\exiftool.exe";
