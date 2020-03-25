@@ -10,7 +10,7 @@ public class Picture {
 	 * absolute path + file name + extension
 	 * ex) C:\\Users\\user\\Downloads\\image.jpg
 	 */
-	private String path;
+	private String source;
 	
 	/**
 	 * image meta info (exif)
@@ -18,12 +18,12 @@ public class Picture {
 	 */
 	private Map<String, String> exifInfos;
 	
-	public String getPath() {
-		return path;
+	public String getSource() {
+		return source;
 	}
 	
-	public void setPath(String path) {
-		this.path = path;
+	public void setSource(String source) {
+		this.source = source;
 	}
 	
 	public Map<String, String> getExifInfos() {
@@ -40,7 +40,7 @@ public class Picture {
 
 	@Override
 	public String toString() {
-		return "Image [path=" + path + ", exifInfos="
+		return "Image [source=" + source + ", exifInfos="
 				+ exifInfos == null ? null : exifInfos.entrySet().stream().map(entry -> entry.getKey() + ": " + entry.getValue()).collect(Collectors.joining("\n"))
 				+ "]";
 	}

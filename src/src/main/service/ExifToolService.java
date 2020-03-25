@@ -14,7 +14,7 @@ public class ExifToolService {
 	private static final Logger log = CustomLogger.getGlobal();
 	
 	// exiftool.exe path
-	private final String appPath = "C:\\exiftool.exe";
+	private final String appSource = "C:\\exiftool.exe";
 	
 	private ExifToolService() {
 	}
@@ -27,13 +27,14 @@ public class ExifToolService {
 		return Loader.INSTANCE;
 	}
 
-	public Picture getPicture(String path) throws IOException, InterruptedException {
-		ProcessBuilder processBuilder = new ProcessBuilder(appPath, path);
+	public Picture getPicture(String source) throws IOException, InterruptedException {
+		ProcessBuilder processBuilder = new ProcessBuilder(appSource, source);
 		Process process = processBuilder.start();
 		BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 
 		Picture picture = new Picture();
+		picture.setSource(source);
 		
 		Map<String, String> exifInfos = new HashMap<>();
 		String line;
