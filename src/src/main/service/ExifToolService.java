@@ -41,9 +41,9 @@ public class ExifToolService {
 		while((line = stdInput.readLine()) != null) {
 			int divi = line.indexOf(":");
 			if(divi != -1) {
-				exifInfos.put(line.substring(0, divi).trim(), line.substring(divi + 1).trim());
+				exifInfos.putIfAbsent(line.substring(0, divi).trim(), line.substring(divi + 1).trim());
 			}
-			log.info(line);
+//			log.info(line);
 		}
 		picture.setExifInfos(exifInfos);
 		
@@ -54,7 +54,7 @@ public class ExifToolService {
 			}
 		}
 		
-		process.waitFor();
+		//process.waitFor();
 		return picture;
 	}
 }

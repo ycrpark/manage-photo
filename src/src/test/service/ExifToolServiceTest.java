@@ -12,13 +12,13 @@ public class ExifToolServiceTest {
 	public static ExifToolService exifToolService = ExifToolService.getInstance();
 	
 	public static void main(String[] args) {
-		String source = "C:\\Users\\ycrpa\\Downloads\\새 폴더\\새 폴더";
+		String source = "C:\\Users\\ycrpa\\Downloads\\새 폴더\\TEST";
 
 		File target = new File(source);
 		for (File file : target.listFiles()) {
 			try {
 				Picture picture = exifToolService.getPicture(file.getPath());
-				log.info(picture.toString());
+				//log.info(picture.toString());
 			} catch(IOException | InterruptedException e) {
 				log.severe(e.toString());
 			}

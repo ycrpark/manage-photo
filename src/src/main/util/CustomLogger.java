@@ -43,7 +43,8 @@ public class CustomLogger {
 				sb.append(" [").append(record.getLevel()).append("] ");
 				
 				// path
-				sb.append("[").append(record.getSourceClassName()).append(".");
+				sb.append("[");
+//				sb.append(record.getSourceClassName()).append(".");
 				sb.append(record.getSourceMethodName()).append("] ");
 				
 				// message
