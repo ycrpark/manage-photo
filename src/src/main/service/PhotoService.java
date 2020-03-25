@@ -16,11 +16,12 @@ import java.util.logging.Logger;
 
 import src.main.model.Photo;
 import src.main.model.Result;
+import src.main.util.Utils;
 
 public class PhotoService {
 	private static final Logger log = Logger.getGlobal();
 	
-	private static final String ROOT_DIRECTORY_KEY = "ROOT";
+	private static final String ROOT_DIRECTORY = "ROOT";
 	
 	private PhotoService() {
 	}
@@ -35,16 +36,19 @@ public class PhotoService {
 	
 	public static ExifToolService exifToolService = ExifToolService.getInstance();
 	
-	public void changePhotoName(String source) {
+	public void renamePhotos(String source) {
 		Result result = new Result();
+		
+		File file = new File(source);
+		result.setRootDirectory(file.isFile() ? file.getParent() : file.getPath());
 		Map<String, List<Photo>> photosMap = new HashMap<>();
 		
 		try {
 			collectPhotos(source, result, photosMap);
-			log.info("#####collect completed, directoryCount: " + result.getCollectDirectoryCount() + ", photoCount: " + result.getCollectPhotoCount());
+			log.info(result.getLog("#####read and collet completed.#####", "#####read and collet completed.#####\n"));
 			if(result.getErrorMessage() == null) {
-				changeCollectedPhotoName(result, photosMap);
-				log.info("#####changeName completed, photoCount: " + result.getCompletedPhotoCount() + " / " + result.getCollectPhotoCount());
+				renamePhotos(result, photosMap);
+				log.info(result.getLog("#####rename completed.#####", "#####rename completed.#####\n"));
 			}
 			
 			if(result.getErrorMessage() != null) {
@@ -56,65 +60,96 @@ public class PhotoService {
 	}
 	
 	/**
-	 * @param id
-	 * @param source
-	 * @return if there is an error, return errorMessage. Otherwise, return null.
+	 * collect photo or photos of sub directories
+	 * 
+	 * @param source photo or directory path
+	 * @param result contains collect info
+	 * @param photosMap collect photo at photoMap
 	 */
 	private void collectPhotos(String source, Result result, Map<String, List<Photo>> photosMap) {
 		File target = new File(source);
 		
-		// folder
-		if(!target.isFile()) {
-			result.addCollectDirectoryCount();
-			log.info("collected. directoryCount: " + result.getCollectDirectoryCount() + ", photoCount: " + result.getCollectPhotoCount() + " - " + target.getPath());
-			
-			for(File file : target.listFiles()) {
-				collectPhotos(file.getPath(), result, photosMap);
-				if(result.getErrorMessage() != null) {
-					return;
-				}
+		// photo
+		if(target.isFile()) {
+			Photo photo = null;
+			try {
+				photo = exifToolService.getPhoto(target.getPath(), result);
+			} catch(IOException | InterruptedException e) {
+				log.severe("failed read metadata: " + target.getPath() + "\n" + e.toString());
+				result.setErrorMessage("failed read metadata. src: " + target.getPath());
+				return;
 			}
+			
+			String photosKey = target.getParent();
+			// if root directory
+			if(photosKey == null) {
+				photosKey = ROOT_DIRECTORY;
+			}
+			
+			List<Photo> collectedPhotos = photosMap.computeIfAbsent(photosKey, key -> new LinkedList<>());
+			collectedPhotos.add(photo);
+			result.addCollectPhotoCount();
+			log.info(result.getLog("collected. -", "- " + Utils.skipDir(target.getPath(), result.getRootDirectory(), ROOT_DIRECTORY)));
 			
 			return;
 		}
 		
-		Photo photo = null;
+		
+		// folder
+		result.addReadDirectoryCount();
+		log.info(result.getLog("reading... -", "- " + Utils.skipDir(target.getPath(), result.getRootDirectory(), ROOT_DIRECTORY)));
+		
+		List<Photo> photos = null;
 		try {
-			photo = exifToolService.getPhoto(target.getPath());
+			photos = exifToolService.getPhotos(target.getPath(), result);
 		} catch(IOException | InterruptedException e) {
 			log.severe("failed read metadata: " + target.getPath() + "\n" + e.toString());
 			result.setErrorMessage("failed read metadata. src: " + target.getPath());
 			return;
 		}
 		
-		String photosKey = target.getParent();
-		// if root directory
-		if(photosKey == null) {
-			photosKey = ROOT_DIRECTORY_KEY;
+		List<Photo> collectedPhotos = photosMap.computeIfAbsent(target.getPath(), key -> new LinkedList<>());
+		collectedPhotos.addAll(photos);
+		
+		// for logging
+		for(Photo photo : photos) {
+			result.addCollectPhotoCount();
+			log.info(result.getLog("collected. -", "- " + Utils.skipDir(photo.getSource(), result.getRootDirectory(), ROOT_DIRECTORY)));
 		}
 		
-		List<Photo> photos = photosMap.computeIfAbsent(photosKey, key -> new LinkedList<>());
-		photos.add(photo);
-		result.addCollectPhotoCount();
-		log.info("collected. directoryCount: " + result.getCollectDirectoryCount() + ", photoCount: " + result.getCollectPhotoCount() + " - " + target.getPath());
+		// check sub folder
+		for(File subFile : target.listFiles()) {
+			if(!subFile.isFile()) {
+				collectPhotos(subFile.getPath(), result, photosMap);
+			}
+		}
 	}
 	
-	private void changeCollectedPhotoName(Result result, Map<String, List<Photo>> photosMap) {
+	/**
+	 * rename photos
+	 * before call, collectPhotos() call required for numbering
+	 * 
+	 * @param result contains collect info
+	 * @param photosMap targets rename
+	 */
+	private void renamePhotos(Result result, Map<String, List<Photo>> photosMap) {
 		for(List<Photo> photos : photosMap.values()) {
-			photos.sort(Comparator.comparing(Photo::getTakenDate, Comparator.nullsLast(Comparator.naturalOrder())));
+			photos.sort(Comparator.comparing(Photo::getTakenDate, Comparator.nullsLast(Comparator.naturalOrder()))
+					.thenComparing(photo -> photo.getSource().length())
+					.thenComparing(photo -> photo.getSource())
+					);
 			
 			int number = 1;
 			for(Photo photo : photos) {
 				try {
 					File originFile = new File(photo.getSource());
 					
-					changePhotoName(photo, number++);
+					renamePhoto(photo, number++);
 					result.addCompletedPhotoCount();
 					
 					File newFile = new File(photo.getSource());
 					
-					log.info("changed, photoCount: " + result.getCompletedPhotoCount() + " / " + result.getCollectPhotoCount()
-							+ " - " + originFile.getParent() + " [" + originFile.getName() +  " -> " + newFile.getName() + "]");
+					log.info(result.getLog("renamed. -", "- " + Utils.skipDir(originFile.getParent(), result.getRootDirectory(), ROOT_DIRECTORY) + " - " + originFile.getName() +  " -> " + newFile.getName()));
 				} catch(IOException e) {
 					log.severe("failed rename: " + photo.getSource() + "\n" + e.toString());
 					result.setErrorMessage("failed rename: " + photo.getSource());
@@ -124,7 +159,16 @@ public class PhotoService {
 		}
 	}
 	
-	public void changePhotoName(Photo photo, Integer number) throws IOException {
+	/**
+	 * rename of the photo
+	 * yyyyMMdd-HHmmss-0001-image.jpg
+	 * yyyyMMdd-HHmmss-image.jpg if number is null
+	 * 
+	 * @param photo
+	 * @param number nullable
+	 * @throws IOException
+	 */
+	public void renamePhoto(Photo photo, Integer number) throws IOException {
 		if(photo == null) {
 			return;
 		}
@@ -148,6 +192,7 @@ public class PhotoService {
 		
 		
 		String newName = date + "-" + time + (numbering == null ? "" : "-" + numbering) + "-" + file.getName();
+//		String newName = date + "-" + time + (numbering == null ? "" : "-" + numbering + "." + extension);
 		
 		Path path = Paths.get(photo.getSource());
 		Files.move(path, path.resolveSibling(newName));

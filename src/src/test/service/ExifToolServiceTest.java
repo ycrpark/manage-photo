@@ -3,7 +3,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import src.main.model.Picture;
+import src.main.model.Photo;
+import src.main.model.Result;
 import src.main.service.ExifToolService;
 import src.main.util.CustomLogger;
 
@@ -17,8 +18,8 @@ public class ExifToolServiceTest {
 		File target = new File(source);
 		for (File file : target.listFiles()) {
 			try {
-				Picture picture = exifToolService.getPicture(file.getPath());
-				//log.info(picture.toString());
+				Photo photo = exifToolService.getPhoto(file.getPath(), new Result());
+				//log.info(photo.toString());
 			} catch(IOException | InterruptedException e) {
 				log.severe(e.toString());
 			}

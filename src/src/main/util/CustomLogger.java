@@ -3,6 +3,7 @@ package src.main.util;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -34,7 +35,7 @@ public class CustomLogger {
 				
 				// datetime
 				LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(record.getMillis()), ZoneId.systemDefault());
-				sb.append(dateTime.toString());
+				sb.append(dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")));
 				
 				// level
 				for(int i = record.getLevel().getName().length(); i < 7; i++) {

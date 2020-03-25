@@ -9,8 +9,9 @@ public class PhotoServiceTest {
 	public static PhotoService photoService = PhotoService.getInstance();
 	
 	public static void main(String[] args) {
-		String source = "C:\\Users\\ycrpa\\Downloads\\새 폴더\\TEST";
-		
-		photoService.changePhotoName(source);
+		String source = "C:\\Users\\ycrpa\\Downloads\\새 폴더\\test";
+		long start = System.currentTimeMillis();
+		photoService.renamePhotos(source);
+		log.info("running time: " + (System.currentTimeMillis() - start));
 	}
 }
