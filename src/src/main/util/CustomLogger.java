@@ -11,7 +11,17 @@ import java.util.logging.Logger;
 
 public class CustomLogger {
 	
-	public static final Logger getGlobal() {
+	private CustomLogger() {
+	}
+	
+	private static class Loader {
+		public static final Logger GLOBAL_INSTANCE = getGlobalInstance();
+	}
+	public static Logger getGlobal() {
+		return Loader.GLOBAL_INSTANCE;
+	}
+	
+	private static Logger getGlobalInstance() {
 		Logger log = Logger.getGlobal();
 		log.setUseParentHandlers(false);
 		
