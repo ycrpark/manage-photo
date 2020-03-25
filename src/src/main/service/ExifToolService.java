@@ -33,6 +33,9 @@ public class ExifToolService {
 		return Loader.INSTANCE;
 	}
 
+	/**
+	 * print meta infomations of photo
+	 */
 	public Photo getPhoto(String source, Result result) throws IOException, InterruptedException {
 		File file = new File(source);
 		if(!file.isFile()) {
@@ -49,6 +52,9 @@ public class ExifToolService {
 		return photos.get(0);
 	}
 	
+	/**
+	 * print meta infomations of photo or photos
+	 */
 	public List<Photo> getPhotos(String source, Result result) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(appSource, source);
 		Process process = processBuilder.start();

@@ -36,7 +36,13 @@ public class PhotoService {
 	
 	public static ExifToolService exifToolService = ExifToolService.getInstance();
 	
+	/**
+	 * rename the photo's file name to specified format
+	 * target is photo or all photos in a folder, inside folder...
+	 * ex) yyyyMMdd-HHmmss-0001-originName.jpg (taken date)
+	 */
 	public void renamePhotos(String source) {
+		long start = System.currentTimeMillis();
 		Result result = new Result();
 		
 		File file = new File(source);
@@ -57,6 +63,8 @@ public class PhotoService {
 		} catch(Exception e) {
 			log.severe(e.toString());
 		}
+		
+		log.info("renamePhotos run-time: " + (System.currentTimeMillis() - start) + "ms");
 	}
 	
 	/**
@@ -178,9 +186,9 @@ public class PhotoService {
 		String time = dateTime.format(DateTimeFormatter.ofPattern("HHmmss"));
 		
 		File file = new File(photo.getSource());
-//		int pos = file.getName().lastIndexOf(".");
-//		String name = file.getName().substring(0, pos);
-//		String extension = file.getName().substring(pos + 1);
+		int pos = file.getName().lastIndexOf(".");
+		String name = file.getName().substring(0, pos);
+		String extension = file.getName().substring(pos + 1);
 		
 		String numbering = null;
 		if(number != null) {
@@ -190,9 +198,12 @@ public class PhotoService {
 			}
 		}
 		
+		String newName = null;
 		
-		String newName = date + "-" + time + (numbering == null ? "" : "-" + numbering) + "-" + file.getName();
-//		String newName = date + "-" + time + (numbering == null ? "" : "-" + numbering + "." + extension);
+		// yyyyMMdd-HHmmss-0001-image.jpg
+		newName = date + "-" + time + (numbering == null ? "" : "-" + numbering) + "-" + file.getName();
+		// yyyyMMdd-HHmmss-0001.jpg
+//		newName = date + "-" + time + (numbering == null ? "" : "-" + numbering + "." + extension);
 		
 		Path path = Paths.get(photo.getSource());
 		Files.move(path, path.resolveSibling(newName));

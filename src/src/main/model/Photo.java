@@ -40,8 +40,6 @@ public class Photo {
 
 	@Override
 	public String toString() {
-		return "Image [source=" + source + ", exifInfos="
-				+ exifInfos == null ? null : exifInfos.entrySet().stream().map(entry -> entry.getKey() + ": " + entry.getValue()).collect(Collectors.joining("\n"))
-				+ "]";
+		return source + "\n" + exifInfos == null ? null : exifInfos.entrySet().stream().map(entry -> entry.getKey() + ": " + entry.getValue()).collect(Collectors.joining("\n"));
 	}
 }
