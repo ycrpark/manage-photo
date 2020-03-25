@@ -2,8 +2,8 @@ package src.main.model;
 
 public class Result {
 	private int collectDirectoryCount;
-	private int collectPictureCount;
-	private int completedPictureCount;
+	private int collectPhotoCount;
+	private int completedPhotoCount;
 	
 	private String errorMessage;
 	
@@ -15,20 +15,20 @@ public class Result {
 		this.collectDirectoryCount = collectDirectoryCount;
 	}
 	
-	public int getCollectPictureCount() {
-		return collectPictureCount;
+	public int getCollectPhotoCount() {
+		return collectPhotoCount;
 	}
 	
-	public void setCollectPictureCount(int collectPictureCount) {
-		this.collectPictureCount = collectPictureCount;
+	public void setCollectPhotoCount(int collectPhotoCount) {
+		this.collectPhotoCount = collectPhotoCount;
 	}
 	
-	public int getCompletedPictureCount() {
-		return completedPictureCount;
+	public int getCompletedPhotoCount() {
+		return completedPhotoCount;
 	}
 	
-	public void setCompletedPictureCount(int completedPictureCount) {
-		this.completedPictureCount = completedPictureCount;
+	public void setCompletedPhotoCount(int completedPhotoCount) {
+		this.completedPhotoCount = completedPhotoCount;
 	}
 	
 	public String getErrorMessage() {
@@ -43,12 +43,12 @@ public class Result {
 		collectDirectoryCount++;
 	}
 	
-	public void addCollectPictureCount() {
-		collectPictureCount++;
+	public void addCollectPhotoCount() {
+		collectPhotoCount++;
 	}
 	
-	public void addCompletedPictureCount() {
-		completedPictureCount++;
+	public void addCompletedPhotoCount() {
+		completedPhotoCount++;
 	}
 	
 }

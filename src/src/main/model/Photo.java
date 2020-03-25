@@ -3,7 +3,7 @@ package src.main.model;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Picture {
+public class Photo {
 	public static final String TAKEN_DATE = "Create Date";
 	
 	/**
