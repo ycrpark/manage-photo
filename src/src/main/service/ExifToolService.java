@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import src.main.model.CollectInfo;
 import src.main.model.Photo;
-import src.main.model.Result;
 import src.main.util.CustomLogger;
 import src.main.util.Utils;
 
@@ -32,18 +32,18 @@ public class ExifToolService {
 	public static ExifToolService getInstance() {
 		return Loader.INSTANCE;
 	}
-
+	
 	/**
 	 * print meta infomations of photo
 	 */
-	public Photo getPhoto(String source, Result result) throws IOException, InterruptedException {
+	public Photo getPhoto(String source, CollectInfo info) throws IOException, InterruptedException {
 		File file = new File(source);
 		if(!file.isFile()) {
 			log.severe("is directory, source: " + source);
 			return null;
 		}
 		
-		List<Photo> photos = getPhotos(source, result);
+		List<Photo> photos = getPhotos(source, info);
 		if(photos == null || photos.size() != 1) {
 			log.severe("photos is empty or more, source: " + source);
 			return null;
@@ -55,7 +55,7 @@ public class ExifToolService {
 	/**
 	 * print meta infomations of photo or photos
 	 */
-	public List<Photo> getPhotos(String source, Result result) throws IOException, InterruptedException {
+	public List<Photo> getPhotos(String source, CollectInfo info) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(appSource, source);
 		Process process = processBuilder.start();
 		BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream(), charset));
@@ -79,9 +79,9 @@ public class ExifToolService {
 				photo = new Photo();
 				
 				String photoSource = line.substring(divi + 8).trim();
-				if(result != null) {
-					result.addReadPhotoCount();
-					log.info(result.getLog("reading... -", "- " + Utils.skipDir(photoSource, result.getRootDirectory(), "ROOT")));
+				if(info != null) {
+					info.addReadPhotoCount();
+					log.info(info.getLog("reading... -", "- " + Utils.skipDir(photoSource, info.getRootDirectory(), "ROOT")));
 				}
 				
 				photo.setSource(photoSource);
@@ -95,7 +95,8 @@ public class ExifToolService {
 			if(divi < 0) {
 				divi = line.indexOf(":");
 				if(divi >= 0) {
-					exifInfos.putIfAbsent(line.substring(0, divi).trim(), line.substring(divi + 1).trim());
+//					exifInfos.putIfAbsent(line.substring(0, divi).trim(), line.substring(divi + 1).trim());
+					exifInfos.put(line.substring(0, divi).trim(), line.substring(divi + 1).trim());
 				}
 			}
 		}

@@ -3,7 +3,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import src.main.model.Photo;
-import src.main.model.Result;
 import src.main.service.ExifToolService;
 import src.main.util.CustomLogger;
 
@@ -19,7 +18,7 @@ public class ExecuteReadPhotoMetaInfo {
 		String source = "C:\\Users\\ycrpa\\Downloads\\새 폴더\\TEST";
 		
 		try {
-			List<Photo> photos = exifToolService.getPhotos(source, new Result());
+			List<Photo> photos = exifToolService.getPhotos(source, null);
 			for(Photo photo : photos) {
 				log.info(photo.toString());
 			}

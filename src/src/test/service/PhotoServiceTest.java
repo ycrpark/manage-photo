@@ -11,7 +11,7 @@ public class PhotoServiceTest {
 	public static void main(String[] args) {
 		String source = "C:\\Users\\ycrpa\\Downloads\\새 폴더\\test";
 		long start = System.currentTimeMillis();
-		photoService.renamePhotos(source);
+		photoService.renamePhotos(source, true);
 		log.info("running time: " + (System.currentTimeMillis() - start));
 	}
 }

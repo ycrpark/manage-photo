@@ -7,15 +7,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
+import src.main.model.CollectInfo;
 import src.main.model.Photo;
-import src.main.model.Result;
 import src.main.util.Utils;
 
 public class PhotoService {
@@ -41,30 +43,39 @@ public class PhotoService {
 	 * target is photo or all photos in a folder, inside folder...
 	 * ex) yyyyMMdd-HHmmss-0001-originName.jpg (taken date)
 	 */
-	public void renamePhotos(String source) {
+	public void renamePhotos(String source, boolean numbering) {
 		long start = System.currentTimeMillis();
-		Result result = new Result();
+		
+		CollectInfo info = new CollectInfo();
+		info.setSource(source);
+		info.setNumbering(numbering);
+		info.setPhotosMap(new HashMap<String, List<Photo>>());
+		info.setDuplicatedSources(new ArrayList<String>());
 		
 		File file = new File(source);
-		result.setRootDirectory(file.isFile() ? file.getParent() : file.getPath());
-		Map<String, List<Photo>> photosMap = new HashMap<>();
+		info.setRootDirectory(file.isFile() ? file.getParent() : file.getPath());
 		
 		try {
-			collectPhotos(source, result, photosMap);
-			log.info(result.getLog("#####read and collet completed.#####", "#####read and collet completed.#####\n"));
-			if(result.getErrorMessage() == null) {
-				renamePhotos(result, photosMap);
-				log.info(result.getLog("#####rename completed.#####", "#####rename completed.#####\n"));
+			collectPhotos(info);
+			log.info(info.getLog("#####read and collet completed.#####", "#####read and collet completed.#####\n"));
+			if(info.getErrorMessage() == null) {
+				renamePhotos(info);
+				log.info(info.getLog("#####rename completed.#####", "#####rename completed.#####\n"));
 			}
 			
-			if(result.getErrorMessage() != null) {
-				log.severe(result.getErrorMessage());
+			if(info.getErrorMessage() != null) {
+				log.severe(info.getErrorMessage());
 			}
 		} catch(Exception e) {
 			log.severe(e.toString());
+			e.printStackTrace();
 		}
 		
 		log.info("renamePhotos run-time: " + (System.currentTimeMillis() - start) + "ms");
+		
+		for(String src : info.getDuplicatedSources()) {
+			log.warning("duplicated. " + src);
+		}
 	}
 	
 	/**
@@ -74,17 +85,17 @@ public class PhotoService {
 	 * @param result contains collect info
 	 * @param photosMap collect photo at photoMap
 	 */
-	private void collectPhotos(String source, Result result, Map<String, List<Photo>> photosMap) {
-		File target = new File(source);
+	private void collectPhotos(CollectInfo info) {
+		File target = new File(info.getSource());
 		
 		// photo
 		if(target.isFile()) {
 			Photo photo = null;
 			try {
-				photo = exifToolService.getPhoto(target.getPath(), result);
+				photo = exifToolService.getPhoto(target.getPath(), info);
 			} catch(IOException | InterruptedException e) {
 				log.severe("failed read metadata: " + target.getPath() + "\n" + e.toString());
-				result.setErrorMessage("failed read metadata. src: " + target.getPath());
+				info.setErrorMessage("failed read metadata. src: " + target.getPath());
 				return;
 			}
 			
@@ -94,43 +105,72 @@ public class PhotoService {
 				photosKey = ROOT_DIRECTORY;
 			}
 			
-			List<Photo> collectedPhotos = photosMap.computeIfAbsent(photosKey, key -> new LinkedList<>());
+			List<Photo> collectedPhotos = info.getPhotosMap().computeIfAbsent(photosKey, key -> new LinkedList<>());
+			parseInfo(photo);
 			collectedPhotos.add(photo);
-			result.addCollectPhotoCount();
-			log.info(result.getLog("collected. -", "- " + Utils.skipDir(target.getPath(), result.getRootDirectory(), ROOT_DIRECTORY)));
+			
+			info.addCollectPhotoCount();
+			log.info(info.getLog("collected. -", "- " + Utils.skipDir(target.getPath(), info.getRootDirectory(), ROOT_DIRECTORY)));
 			
 			return;
 		}
 		
 		
 		// folder
-		result.addReadDirectoryCount();
-		log.info(result.getLog("reading... -", "- " + Utils.skipDir(target.getPath(), result.getRootDirectory(), ROOT_DIRECTORY)));
+		info.addReadDirectoryCount();
+		log.info(info.getLog("reading... -", "- " + Utils.skipDir(target.getPath(), info.getRootDirectory(), ROOT_DIRECTORY)));
 		
 		List<Photo> photos = null;
 		try {
-			photos = exifToolService.getPhotos(target.getPath(), result);
+			photos = exifToolService.getPhotos(target.getPath(), info);
 		} catch(IOException | InterruptedException e) {
 			log.severe("failed read metadata: " + target.getPath() + "\n" + e.toString());
-			result.setErrorMessage("failed read metadata. src: " + target.getPath());
+			info.setErrorMessage("failed read metadata. src: " + target.getPath());
 			return;
 		}
 		
-		List<Photo> collectedPhotos = photosMap.computeIfAbsent(target.getPath(), key -> new LinkedList<>());
-		collectedPhotos.addAll(photos);
+		List<Photo> collectedPhotos = info.getPhotosMap().computeIfAbsent(target.getPath(), key -> new LinkedList<>());
 		
-		// for logging
+		// parse data
 		for(Photo photo : photos) {
-			result.addCollectPhotoCount();
-			log.info(result.getLog("collected. -", "- " + Utils.skipDir(photo.getSource(), result.getRootDirectory(), ROOT_DIRECTORY)));
+			parseInfo(photo);
+			collectedPhotos.add(photo);
+			
+			info.addCollectPhotoCount();
+			log.info(info.getLog("collected. -", "- " + Utils.skipDir(photo.getSource(), info.getRootDirectory(), ROOT_DIRECTORY)));
 		}
 		
 		// check sub folder
 		for(File subFile : target.listFiles()) {
 			if(!subFile.isFile()) {
-				collectPhotos(subFile.getPath(), result, photosMap);
+				collectPhotos(info);
 			}
 		}
+	}
+	
+	private void parseInfo(Photo photo) {
+		File file = new File(photo.getSource());
+		int pos = file.getName().lastIndexOf(".");
+		String name = file.getName().substring(0, pos);
+		
+		LocalDateTime dateTime = null;
+		if(photo.getTakenDate() != null) {
+			dateTime = LocalDateTime.parse(photo.getTakenDate(), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSXXX"));
+		} else if(name.startsWith("P") || name.startsWith("V")) {
+			String dateStr = name.substring(1, 19);
+			dateTime = LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("yyyyMMdd_HHmmssSSS"));
+		} else if(name.length() >= 19 && name.indexOf("-") == 8 && name.indexOf(".") == 15) {
+			dateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss.SSS"));
+		} else if(photo.getFileModificationDate() != null) {
+			
+		}
+		
+		if(dateTime == null) {
+			log.severe(photo.getSource());
+			throw new NullPointerException();
+		}
+		
+		photo.setLocalDateTime(dateTime);
 	}
 	
 	/**
@@ -140,8 +180,12 @@ public class PhotoService {
 	 * @param result contains collect info
 	 * @param photosMap targets rename
 	 */
-	private void renamePhotos(Result result, Map<String, List<Photo>> photosMap) {
-		for(List<Photo> photos : photosMap.values()) {
+	private void renamePhotos(CollectInfo info) {
+		Map<String, Long> newNameCounts = info.getPhotosMap().values().stream()
+				.flatMap(photos -> photos.stream())
+				.collect(Collectors.groupingBy(photo -> getNewName(photo, null, false), Collectors.counting()));
+		
+		for(List<Photo> photos : info.getPhotosMap().values()) {
 			photos.sort(Comparator.comparing(Photo::getTakenDate, Comparator.nullsLast(Comparator.naturalOrder()))
 					.thenComparing(photo -> photo.getSource().length())
 					.thenComparing(photo -> photo.getSource())
@@ -152,58 +196,64 @@ public class PhotoService {
 				try {
 					File originFile = new File(photo.getSource());
 					
-					renamePhoto(photo, number++);
-					result.addCompletedPhotoCount();
+					String uniqueNewName = getNewName(photo, null, false);
+					
+					boolean duplication = newNameCounts.get(uniqueNewName) > 1;
+					String newName = getNewName(photo, info.isNumbering() ? number++ : null, duplication);
+					
+					renamePhoto(photo, newName);
+					info.addCompletedPhotoCount();
 					
 					File newFile = new File(photo.getSource());
+					log.info(info.getLog("renamed. -", "- " + Utils.skipDir(originFile.getParent(), info.getRootDirectory(), ROOT_DIRECTORY) + " - " + originFile.getName() +  " -> " + newFile.getName()));
 					
-					log.info(result.getLog("renamed. -", "- " + Utils.skipDir(originFile.getParent(), result.getRootDirectory(), ROOT_DIRECTORY) + " - " + originFile.getName() +  " -> " + newFile.getName()));
+					if(duplication) {
+						info.getDuplicatedSources().add(photo.getSource());
+					}
+					
 				} catch(IOException e) {
 					log.severe("failed rename: " + photo.getSource() + "\n" + e.toString());
-					result.setErrorMessage("failed rename: " + photo.getSource());
+					info.setErrorMessage("failed rename: " + photo.getSource());
 					return;
 				}
 			}
 		}
 	}
 	
-	/**
-	 * rename of the photo
-	 * yyyyMMdd-HHmmss-0001-image.jpg
-	 * yyyyMMdd-HHmmss-image.jpg if number is null
-	 * 
-	 * @param photo
-	 * @param number nullable
-	 * @throws IOException
-	 */
-	public void renamePhoto(Photo photo, Integer number) throws IOException {
-		if(photo == null) {
-			return;
-		}
-		
-		LocalDateTime dateTime = LocalDateTime.parse(photo.getTakenDate(), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss"));
-		String date = dateTime.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-		String time = dateTime.format(DateTimeFormatter.ofPattern("HHmmss"));
-		
+	private String getNewName(Photo photo, Integer number, boolean duplication) {
 		File file = new File(photo.getSource());
 		int pos = file.getName().lastIndexOf(".");
 		String name = file.getName().substring(0, pos);
 		String extension = file.getName().substring(pos + 1);
 		
-		String numbering = null;
-		if(number != null) {
-			numbering = String.valueOf(number);
-			for(int i = numbering.length(); i < 4; i++) {
-				numbering = "0" + numbering;
-			}
-		}
+		String date = photo.getLocalDateTime().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+		String time = photo.getLocalDateTime().format(DateTimeFormatter.ofPattern("HHmmss"));
+		String ms = photo.getLocalDateTime().format(DateTimeFormatter.ofPattern("SSS"));
+		
 		
 		String newName = null;
 		
+		// yyyyMMdd-HHmmss.SSS-00001-00001.jpg
+		newName = date + "-" + time + "." + ms + "-" + "00001"
+				+ "-" + (number == null ? "00000" : Utils.lPad(String.valueOf(number), 5, "0"))
+				+ (duplication ? "-" + name : "") + "." + extension;
+		
 		// yyyyMMdd-HHmmss-0001-image.jpg
-		newName = date + "-" + time + (numbering == null ? "" : "-" + numbering) + "-" + file.getName();
+//		newName = date + "-" + time + (numbering == null ? "" : "-" + numbering) + "-" + file.getName();
 		// yyyyMMdd-HHmmss-0001.jpg
 //		newName = date + "-" + time + (numbering == null ? "" : "-" + numbering + "." + extension);
+		
+		return newName;
+	}
+	
+	/**
+	 * rename of the photo
+	 * 
+	 * @param photo
+	 * @throws IOException
+	 */
+	public void renamePhoto(Photo photo, String newName) throws IOException {
+		File file = new File(photo.getSource());
 		
 		Path path = Paths.get(photo.getSource());
 		Files.move(path, path.resolveSibling(newName));

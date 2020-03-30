@@ -12,6 +12,6 @@ public class ExecuteRenamePhoto {
 	public static void main(String[] args) {
 		// photo file or directory path
 		String source = "C:\\Users\\ycrpa\\Downloads\\새 폴더\\test";
-		photoService.renamePhotos(source);
+		photoService.renamePhotos(source, false);
 	}
 }
