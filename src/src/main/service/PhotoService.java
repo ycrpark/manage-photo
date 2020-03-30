@@ -42,6 +42,11 @@ public class PhotoService {
 	 * rename the photo's file name to specified format
 	 * target is photo or all photos in a folder, inside folder...
 	 * ex) yyyyMMdd-HHmmss-0001-originName.jpg (taken date)
+	 * 
+	 * @param source
+	 * photo or directory path
+	 * @param numbering
+	 * numbering or not
 	 */
 	public void renamePhotos(String source, boolean numbering) {
 		long start = System.currentTimeMillis();
@@ -81,9 +86,7 @@ public class PhotoService {
 	/**
 	 * collect photo or photos of sub directories
 	 * 
-	 * @param source photo or directory path
-	 * @param result contains collect info
-	 * @param photosMap collect photo at photoMap
+	 * @param info
 	 */
 	private void collectPhotos(CollectInfo info) {
 		File target = new File(info.getSource());
@@ -148,6 +151,11 @@ public class PhotoService {
 		}
 	}
 	
+	/**
+	 * parse photo meta data
+	 * 
+	 * @param photo
+	 */
 	private void parseInfo(Photo photo) {
 		File file = new File(photo.getSource());
 		int pos = file.getName().lastIndexOf(".");
@@ -175,17 +183,18 @@ public class PhotoService {
 	
 	/**
 	 * rename photos
-	 * before call, collectPhotos() call required for numbering
+	 * before call, collectPhotos() call required
 	 * 
-	 * @param result contains collect info
-	 * @param photosMap targets rename
+	 * @param info
 	 */
 	private void renamePhotos(CollectInfo info) {
+		// check duplication, counting grouping
 		Map<String, Long> newNameCounts = info.getPhotosMap().values().stream()
 				.flatMap(photos -> photos.stream())
 				.collect(Collectors.groupingBy(photo -> getNewName(photo, null, false), Collectors.counting()));
 		
 		for(List<Photo> photos : info.getPhotosMap().values()) {
+			// sort for numbering
 			photos.sort(Comparator.comparing(Photo::getTakenDate, Comparator.nullsLast(Comparator.naturalOrder()))
 					.thenComparing(photo -> photo.getSource().length())
 					.thenComparing(photo -> photo.getSource())
@@ -220,6 +229,16 @@ public class PhotoService {
 		}
 	}
 	
+	/**
+	 * get new file name
+	 * 
+	 * @param photo
+	 * @param number
+	 * nullable 00000
+	 * @param duplication
+	 * if duplication append orignal file name
+	 * @return
+	 */
 	private String getNewName(Photo photo, Integer number, boolean duplication) {
 		File file = new File(photo.getSource());
 		int pos = file.getName().lastIndexOf(".");
@@ -250,6 +269,7 @@ public class PhotoService {
 	 * rename of the photo
 	 * 
 	 * @param photo
+	 * @param newName
 	 * @throws IOException
 	 */
 	public void renamePhoto(Photo photo, String newName) throws IOException {
