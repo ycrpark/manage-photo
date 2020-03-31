@@ -3,6 +3,9 @@ package src.main.service;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -16,6 +19,7 @@ import java.util.stream.Collectors;
 import src.main.comm.Constants;
 import src.main.comm.CustomLogger;
 import src.main.model.RenamePhotoInfo;
+import src.main.model.UpdatePhotoInfo;
 import src.main.model.Photo;
 import src.main.util.Utils;
 
@@ -159,24 +163,48 @@ public class PhotoService {
 		int pos = file.getName().lastIndexOf(".");
 		String name = file.getName().substring(0, pos);
 		
-		LocalDateTime dateTime = null;
-		if(photo.getTakenDate() != null) {
-			dateTime = LocalDateTime.parse(photo.getTakenDate(), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSXXX"));
+		LocalDateTime localDateTime = null;
+		ZonedDateTime zonedDateTime = null;
+		if(photo.getExifInfo(Photo.DATETIME_ORIGINAL) != null) {
+			zonedDateTime = ZonedDateTime.parse(photo.getExifInfo(Photo.DATETIME_ORIGINAL), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSXXX"));
+			localDateTime = zonedDateTime.toLocalDateTime();
+		} else if(photo.getExifInfo(Photo.CREATE_DATE) != null) {
+			zonedDateTime = ZonedDateTime.parse(photo.getExifInfo(Photo.CREATE_DATE), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSXXX"));
+			localDateTime = zonedDateTime.toLocalDateTime();
 		} else if(name.startsWith("P") || name.startsWith("V")) {
+			// naver cloud format
 			String dateStr = name.substring(1, 19);
-			dateTime = LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("yyyyMMdd_HHmmssSSS"));
-		} else if(name.length() >= 19 && name.indexOf("-") == 8 && name.indexOf(".") == 15) {
-			dateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss.SSS"));
-		} else if(photo.getFileModificationDate() != null) {
-			
+			localDateTime = LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("yyyyMMdd_HHmmssSSS"));
+			// zonedDateTime = ZonedDateTime.of(localDateTime, ZoneId.of("Asia/Seoul"));
+		} else if(name.length() >= 19 && name.indexOf("-") == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15) {
+			// origin photoSync format
+			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern("yyyyMMdd" + Constants.NAME_SEPARATOR + "HHmmss" + Constants.MILLISEC_SEPARATOR + "SSS"));
+		} else if(name.length() >= 24 && name.indexOf(Constants.NAME_SEPARATOR) == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15
+				&& (name.indexOf("+") == 19 || name.indexOf("-") == 19)) {
+			// photoSync format
+			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern("yyyyMMdd" + Constants.NAME_SEPARATOR + "HHmmss" + Constants.MILLISEC_SEPARATOR + "SSS"));
+		} else if(name.length() >= 19 && name.indexOf(Constants.NAME_SEPARATOR) == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15) {
+			// photoSync format
+			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern("yyyyMMdd" + Constants.NAME_SEPARATOR + "HHmmss" + Constants.MILLISEC_SEPARATOR + "SSS"));
+		} else if(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE) != null) {
+			zonedDateTime = ZonedDateTime.parse(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ssXXX"));
+			localDateTime = zonedDateTime.toLocalDateTime();
 		}
 		
-		if(dateTime == null) {
+		if(localDateTime == null) {
 			log.severe(photo.getSource());
 			throw new NullPointerException();
 		}
 		
-		photo.setLocalDateTime(dateTime);
+		if(zonedDateTime == null) {
+			if(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE) != null) {
+				ZoneId zoneId = ZonedDateTime.parse(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ssXXX")).getZone();
+				zonedDateTime = ZonedDateTime.of(localDateTime, zoneId);
+			}
+		}
+		
+		photo.setLocalDateTime(localDateTime);
+		photo.setZonedDateTime(zonedDateTime);
 	}
 	
 	/**
@@ -193,7 +221,7 @@ public class PhotoService {
 		
 		for(List<Photo> photos : info.getPhotosMap().values()) {
 			// sort for numbering
-			photos.sort(Comparator.comparing(Photo::getTakenDate, Comparator.nullsLast(Comparator.naturalOrder()))
+			photos.sort(Comparator.comparing(Photo::getLocalDateTime, Comparator.nullsLast(Comparator.naturalOrder()))
 					.thenComparing(photo -> photo.getSource().length())
 					.thenComparing(photo -> photo.getSource())
 					);
@@ -246,23 +274,128 @@ public class PhotoService {
 		String name = file.getName().substring(0, pos);
 		String extension = file.getName().substring(pos + 1);
 		
-		String date = photo.getLocalDateTime().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-		String time = photo.getLocalDateTime().format(DateTimeFormatter.ofPattern("HHmmss"));
-		String ms = photo.getLocalDateTime().format(DateTimeFormatter.ofPattern("SSS"));
+		ZonedDateTime dateTime = photo.getZonedDateTime();
+		// set +00:00
+		if(dateTime == null) {
+			dateTime = ZonedDateTime.of(photo.getLocalDateTime(), ZoneOffset.UTC);
+		}
+		String date = dateTime.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+		String time = dateTime.format(DateTimeFormatter.ofPattern("HHmmss"));
+		String ms = dateTime.format(DateTimeFormatter.ofPattern("SSS"));
+		String offset = dateTime.format(DateTimeFormatter.ofPattern("xxxx"));
 		
 		
-		String newName = null;
+		StringBuilder newName = new StringBuilder();
 		
-		// yyyyMMdd-HHmmss.SSS-00001-00001.jpg
-		newName = date + "-" + time + "." + ms + "-" + "00001"
-				+ "-" + (number == null ? "00000" : Utils.lPad(String.valueOf(number), 5, "0"))
-				+ (duplication ? "-" + name : "") + "." + extension;
+		// yyyyMMdd_HHmmss.SSS_+0900_00001_00001.jpg
+		newName.append(date);
+		newName.append(Constants.NAME_SEPARATOR).append(time).append(Constants.MILLISEC_SEPARATOR).append(ms);
+		newName.append(Constants.NAME_SEPARATOR).append(offset);
+		newName.append(Constants.NAME_SEPARATOR).append("00001");
+		newName.append(Constants.NAME_SEPARATOR).append(number == null ? "00000" : Utils.lPad(String.valueOf(number), 5, "0"));
+		if(duplication) {
+			newName.append(Constants.NAME_SEPARATOR).append(name);
+		}
+		newName.append(".").append(extension);
 		
 		// yyyyMMdd-HHmmss-0001-image.jpg
 //		newName = date + "-" + time + (numbering == null ? "" : "-" + numbering) + "-" + file.getName();
 		// yyyyMMdd-HHmmss-0001.jpg
 //		newName = date + "-" + time + (numbering == null ? "" : "-" + numbering + "." + extension);
 		
-		return newName;
+		return newName.toString();
 	}
+	
+	public void updatePhotos(String source) {
+		long start = System.currentTimeMillis();
+		
+		UpdatePhotoInfo info = new UpdatePhotoInfo();
+		
+		File file = new File(source);
+		info.setRootDirectory(file.isFile() ? file.getParent() : file.getPath());
+		info.setFailedPhotoSources(new ArrayList<>());
+		
+		try {
+//			updatePhotos(source, info);
+			log.info(info.getLog("#####updatePhotos completed.#####", "#####updatePhotos completed.#####\n"));
+		} catch(Exception e) {
+			log.severe(e.toString());
+			e.printStackTrace();
+		}
+		
+		log.info("updatePhotos run-time: " + (System.currentTimeMillis() - start) + "ms");
+		
+		for(String src : info.getFailedPhotoSources()) {
+			log.severe("failed. " + Utils.skipDir(src, info.getRootDirectory(), Constants.ROOT_DIRECTORY));
+		}
+	}
+	
+//	private void updatePhotos(String source, UpdatePhotoInfo info) {
+//		File target = new File(source);
+//		
+//		// photo
+//		if(target.isFile()) {
+//			Photo photo = null;
+//			try {
+//				photo = exifToolService.getPhoto(target.getPath(), null);
+//				parseInfo(photo);
+//				
+//				
+//				LocalDateTime localDateTime = LocalDateTime.parse(target.getName(), DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss.SSS"));
+//				ZonedDateTime zonedDateTime = ZonedDateTime.of(localDateTime, ZoneOffset.of);
+//				
+//				photo = exifToolService.getPhoto(target.getPath(), info);
+//			} catch(IOException | InterruptedException e) {
+//				log.severe("failed read metadata: " + target.getPath() + "\n" + e.toString());
+//				return;
+//			}
+//			
+//			String photosKey = target.getParent();
+//			// if root directory
+//			if(photosKey == null) {
+//				photosKey = Constants.ROOT_DIRECTORY;
+//			}
+//			
+//			List<Photo> collectedPhotos = info.getPhotosMap().computeIfAbsent(photosKey, key -> new LinkedList<>());
+//			parseInfo(photo);
+//			collectedPhotos.add(photo);
+//			
+//			info.addCollectPhotoCount();
+//			log.info(info.getLog("collected. -", "- " + Utils.skipDir(target.getPath(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
+//			
+//			return;
+//		}
+//		
+//		
+//		// folder
+//		info.addReadDirectoryCount();
+//		log.info(info.getLog("reading... -", "- " + Utils.skipDir(target.getPath(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
+//		
+//		List<Photo> photos = null;
+//		try {
+//			photos = exifToolService.getPhotos(target.getPath(), info);
+//		} catch(IOException | InterruptedException e) {
+//			log.severe("failed read metadata: " + target.getPath() + "\n" + e.toString());
+//			info.setErrorMessage("failed read metadata. src: " + target.getPath());
+//			return;
+//		}
+//		
+//		List<Photo> collectedPhotos = info.getPhotosMap().computeIfAbsent(target.getPath(), key -> new LinkedList<>());
+//		
+//		// parse data
+//		for(Photo photo : photos) {
+//			parseInfo(photo);
+//			collectedPhotos.add(photo);
+//			
+//			info.addCollectPhotoCount();
+//			log.info(info.getLog("collected. -", "- " + Utils.skipDir(photo.getSource(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
+//		}
+//		
+//		// check sub folder
+//		for(File subFile : target.listFiles()) {
+//			if(!subFile.isFile()) {
+//				collectPhotos(subFile.getPath(), info);
+//			}
+//		}
+//	}
 }

@@ -1,26 +1,28 @@
 package src.main.model;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Photo {
-	public static final String TAKEN_DATE = "Create Date";
+	public static final String CREATE_DATE = "Create Date";
+	public static final String DATETIME_ORIGINAL = "Date/Time Original";
 	public static final String FILE_MODIFICATION_DATE = "File Modification Date/Time";
 	
 	/**
-	 * absolute path + file name + extension
-	 * ex) C:\\Users\\user\\Downloads\\image.jpg
+	 * absolute path + file name + extension ex) C:\\Users\\user\\Downloads\\image.jpg
 	 */
 	private String source;
 	
 	/**
-	 * image meta info (exif)
-	 * ex) {"Create Date": "2020:02:08 07:24:32", "Date/Time Original": "2020:02:08 07:24:32"}
+	 * image meta info (exif) ex) {"Create Date": "2020:02:08 07:24:32", "Date/Time Original": "2020:02:08 07:24:32"}
 	 */
 	private Map<String, String> exifInfos;
 	
 	private LocalDateTime localDateTime;
+	
+	private ZonedDateTime zonedDateTime;
 	
 	public String getSource() {
 		return source;
@@ -38,12 +40,8 @@ public class Photo {
 		this.exifInfos = exifInfos;
 	}
 	
-	public String getTakenDate() {
-		return exifInfos != null ? exifInfos.get(TAKEN_DATE) : null;
-	}
-	
-	public String getFileModificationDate() {
-		return exifInfos != null ? exifInfos.get(FILE_MODIFICATION_DATE) : null;
+	public String getExifInfo(String key) {
+		return exifInfos != null ? exifInfos.get(key) : null;
 	}
 	
 	public LocalDateTime getLocalDateTime() {
@@ -52,6 +50,14 @@ public class Photo {
 	
 	public void setLocalDateTime(LocalDateTime localDateTime) {
 		this.localDateTime = localDateTime;
+	}
+	
+	public ZonedDateTime getZonedDateTime() {
+		return zonedDateTime;
+	}
+	
+	public void setZonedDateTime(ZonedDateTime zonedDateTime) {
+		this.zonedDateTime = zonedDateTime;
 	}
 	
 	@Override

@@ -4,6 +4,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,8 +17,8 @@ import java.util.logging.Logger;
 
 import src.main.comm.Constants;
 import src.main.comm.CustomLogger;
-import src.main.model.RenamePhotoInfo;
 import src.main.model.Photo;
+import src.main.model.RenamePhotoInfo;
 import src.main.util.Utils;
 
 public class ExifToolService {
@@ -59,7 +64,7 @@ public class ExifToolService {
 	public List<Photo> getPhotos(String source, RenamePhotoInfo info) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(appSource, source);
 		Process process = processBuilder.start();
-		BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream(), charset));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), charset));
 		
 		File file = new File(source);
 		List<Photo> photos = new LinkedList<>();
@@ -74,7 +79,10 @@ public class ExifToolService {
 			photo.setExifInfos(exifInfos);
 			photos.add(photo);
 		}
-		while((line = stdInput.readLine()) != null) {
+		
+//		process.waitFor();
+		
+		while((line = reader.readLine()) != null) {
 			int divi = line.indexOf("========");
 			if(divi >= 0 && !file.isFile()) {
 				photo = new Photo();
@@ -102,15 +110,66 @@ public class ExifToolService {
 			}
 		}
 		
-		BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-		while((line = stdError.readLine()) != null) {
+		BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+		while((line = errorReader.readLine()) != null) {
 			int divi = line.indexOf(":");
 			if(divi != -1 && !line.substring(0, divi).trim().equals("Warning")) {
 				log.severe(line);
 			}
 		}
 		
-//		process.waitFor();
+		reader.close();
+		errorReader.close();
+		process.destroy();
 		return photos;
+	}
+	
+	/**
+	 * override exif meta info
+	 * 
+	 * @return
+	 * success or not
+	 */
+	public boolean setDate(String source, ZonedDateTime zonedDateTime, LocalDateTime localDateTime) throws IOException, InterruptedException {
+		List<String> commands = new ArrayList<>();
+		commands.add(appSource);
+		// do not create copies
+		commands.add("-overwrite_original");
+		
+		String dateTime = null;
+		if(zonedDateTime != null) {
+			dateTime = zonedDateTime.format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSXXX"));
+		} else {
+			dateTime = localDateTime.format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSS"));
+		}
+		
+		// TODO exist not supported datetimeoriginal
+		List<String> dateCommands = Arrays.asList("datetimeoriginal", "CreateDate", "ModifyDate", "FileCreateDate", "FileModifyDate");
+		for(String dateCommand : dateCommands) {
+			commands.add("\"-" + dateCommand + "=" + dateTime + "\"");
+//			commands.add("\"-" + dateCommand + "=");
+//			commands.add(dateTime);
+//			commands.add("\"");
+		}
+		
+		commands.add(source);
+		
+		ProcessBuilder processBuilder = new ProcessBuilder(commands);
+		Process process = processBuilder.start();
+		
+		boolean success = true;
+		String line;
+		BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream(), charset));
+		while ((line = errorReader.readLine()) != null) {
+			int pos = line.indexOf(":");
+			if (pos != -1 && !line.substring(0, pos).trim().equals("Warning")) {
+				log.severe(line);
+				success = false;
+			}
+		}
+		
+		errorReader.close();
+		process.destroy();
+		return success;
 	}
 }
