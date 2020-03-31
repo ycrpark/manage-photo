@@ -1,4 +1,4 @@
-package src.main.util;
+package src.main.comm;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -35,7 +35,7 @@ public class CustomLogger {
 				
 				// datetime
 				LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(record.getMillis()), ZoneId.systemDefault());
-				sb.append(dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")));
+				sb.append(dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 				
 				// level
 				for(int i = record.getLevel().getName().length(); i < 7; i++) {
@@ -45,7 +45,8 @@ public class CustomLogger {
 				
 				// path
 				sb.append("[");
-//				sb.append(record.getSourceClassName()).append(".");
+				sb.append(record.getSourceClassName().substring(record.getSourceClassName().lastIndexOf(".") + 1))
+				.append(".");
 				sb.append(record.getSourceMethodName()).append("] ");
 				
 				// message

@@ -1,17 +1,65 @@
 package src.main.model;
 
+import java.util.List;
+import java.util.Map;
+
 import src.main.util.Utils;
 
-public class Result {
+public class RenamePhotoInfo {
+	/**
+	 * do numbering or not
+	 */
+	private boolean numbering;
+	
+	/**
+	 * collected photos for numbering by folder
+	 */
+	private Map<String, List<Photo>> photosMap;
+	
+	/**
+	 * duplicate file names
+	 */
+	private List<String> duplicatedSources;
+	
+	/**
+	 * root path
+	 */
+	private String rootDirectory;
+	
 	private int readDirectoryCount;
 	
 	private int readPhotoCount;
+	
 	private int collectPhotoCount;
+	
 	private int completedPhotoCount;
 	
 	private String errorMessage;
-	private String rootDirectory;
 	
+	public boolean isNumbering() {
+		return numbering;
+	}
+
+	public void setNumbering(boolean numbering) {
+		this.numbering = numbering;
+	}
+
+	public Map<String, List<Photo>> getPhotosMap() {
+		return photosMap;
+	}
+	
+	public void setPhotosMap(Map<String, List<Photo>> photosMap) {
+		this.photosMap = photosMap;
+	}
+	
+	public List<String> getDuplicatedSources() {
+		return duplicatedSources;
+	}
+
+	public void setDuplicatedSources(List<String> duplicatedSources) {
+		this.duplicatedSources = duplicatedSources;
+	}
+
 	public int getReadDirectoryCount() {
 		return readDirectoryCount;
 	}

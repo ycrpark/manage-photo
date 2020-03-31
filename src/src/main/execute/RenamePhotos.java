@@ -1,7 +1,7 @@
 package src.main.execute;
 import src.main.service.PhotoService;
 
-public class ExecuteRenamePhoto {
+public class RenamePhotos {
 	public static PhotoService photoService = PhotoService.getInstance();
 	
 	/**

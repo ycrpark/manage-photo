@@ -1,8 +1,8 @@
 package src.test.service;
 import java.util.logging.Logger;
 
+import src.main.comm.CustomLogger;
 import src.main.service.PhotoService;
-import src.main.util.CustomLogger;
 
 public class PhotoServiceTest {
 	private static final Logger log = CustomLogger.getGlobal();

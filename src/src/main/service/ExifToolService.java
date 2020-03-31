@@ -10,9 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import src.main.model.CollectInfo;
+import src.main.comm.Constants;
+import src.main.comm.CustomLogger;
+import src.main.model.RenamePhotoInfo;
 import src.main.model.Photo;
-import src.main.util.CustomLogger;
 import src.main.util.Utils;
 
 public class ExifToolService {
@@ -36,7 +37,7 @@ public class ExifToolService {
 	/**
 	 * print meta infomations of photo
 	 */
-	public Photo getPhoto(String source, CollectInfo info) throws IOException, InterruptedException {
+	public Photo getPhoto(String source, RenamePhotoInfo info) throws IOException, InterruptedException {
 		File file = new File(source);
 		if(!file.isFile()) {
 			log.severe("is directory, source: " + source);
@@ -55,7 +56,7 @@ public class ExifToolService {
 	/**
 	 * print meta infomations of photo or photos
 	 */
-	public List<Photo> getPhotos(String source, CollectInfo info) throws IOException, InterruptedException {
+	public List<Photo> getPhotos(String source, RenamePhotoInfo info) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(appSource, source);
 		Process process = processBuilder.start();
 		BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream(), charset));
@@ -81,7 +82,7 @@ public class ExifToolService {
 				String photoSource = line.substring(divi + 8).trim();
 				if(info != null) {
 					info.addReadPhotoCount();
-					log.info(info.getLog("reading... -", "- " + Utils.skipDir(photoSource, info.getRootDirectory(), "ROOT")));
+					log.info(info.getLog("reading... -", "- " + Utils.skipDir(photoSource, info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
 				}
 				
 				photo.setSource(photoSource);

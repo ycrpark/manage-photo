@@ -2,11 +2,11 @@ package src.main.execute;
 import java.util.List;
 import java.util.logging.Logger;
 
+import src.main.comm.CustomLogger;
 import src.main.model.Photo;
 import src.main.service.ExifToolService;
-import src.main.util.CustomLogger;
 
-public class ExecuteReadPhotoMetaInfo {
+public class ReadPhotos {
 	private static final Logger log = CustomLogger.getGlobal();
 	public static ExifToolService exifToolService = ExifToolService.getInstance();
 	

@@ -2,9 +2,6 @@ package src.main.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -16,14 +13,14 @@ import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import src.main.model.CollectInfo;
+import src.main.comm.Constants;
+import src.main.comm.CustomLogger;
+import src.main.model.RenamePhotoInfo;
 import src.main.model.Photo;
 import src.main.util.Utils;
 
 public class PhotoService {
-	private static final Logger log = Logger.getGlobal();
-	
-	private static final String ROOT_DIRECTORY = "ROOT";
+	private static final Logger log = CustomLogger.getGlobal();
 	
 	private PhotoService() {
 	}
@@ -38,6 +35,8 @@ public class PhotoService {
 	
 	public static ExifToolService exifToolService = ExifToolService.getInstance();
 	
+	public static FileService fileService = FileService.getInstance();
+	
 	/**
 	 * rename the photo's file name to specified format
 	 * target is photo or all photos in a folder, inside folder...
@@ -51,8 +50,7 @@ public class PhotoService {
 	public void renamePhotos(String source, boolean numbering) {
 		long start = System.currentTimeMillis();
 		
-		CollectInfo info = new CollectInfo();
-		info.setSource(source);
+		RenamePhotoInfo info = new RenamePhotoInfo();
 		info.setNumbering(numbering);
 		info.setPhotosMap(new HashMap<String, List<Photo>>());
 		info.setDuplicatedSources(new ArrayList<String>());
@@ -61,7 +59,7 @@ public class PhotoService {
 		info.setRootDirectory(file.isFile() ? file.getParent() : file.getPath());
 		
 		try {
-			collectPhotos(info);
+			collectPhotos(source, info);
 			log.info(info.getLog("#####read and collet completed.#####", "#####read and collet completed.#####\n"));
 			if(info.getErrorMessage() == null) {
 				renamePhotos(info);
@@ -79,7 +77,7 @@ public class PhotoService {
 		log.info("renamePhotos run-time: " + (System.currentTimeMillis() - start) + "ms");
 		
 		for(String src : info.getDuplicatedSources()) {
-			log.warning("duplicated. " + src);
+			log.warning("duplicated. " + Utils.skipDir(src, info.getRootDirectory(), Constants.ROOT_DIRECTORY));
 		}
 	}
 	
@@ -88,8 +86,8 @@ public class PhotoService {
 	 * 
 	 * @param info
 	 */
-	private void collectPhotos(CollectInfo info) {
-		File target = new File(info.getSource());
+	private void collectPhotos(String source, RenamePhotoInfo info) {
+		File target = new File(source);
 		
 		// photo
 		if(target.isFile()) {
@@ -105,7 +103,7 @@ public class PhotoService {
 			String photosKey = target.getParent();
 			// if root directory
 			if(photosKey == null) {
-				photosKey = ROOT_DIRECTORY;
+				photosKey = Constants.ROOT_DIRECTORY;
 			}
 			
 			List<Photo> collectedPhotos = info.getPhotosMap().computeIfAbsent(photosKey, key -> new LinkedList<>());
@@ -113,7 +111,7 @@ public class PhotoService {
 			collectedPhotos.add(photo);
 			
 			info.addCollectPhotoCount();
-			log.info(info.getLog("collected. -", "- " + Utils.skipDir(target.getPath(), info.getRootDirectory(), ROOT_DIRECTORY)));
+			log.info(info.getLog("collected. -", "- " + Utils.skipDir(target.getPath(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
 			
 			return;
 		}
@@ -121,7 +119,7 @@ public class PhotoService {
 		
 		// folder
 		info.addReadDirectoryCount();
-		log.info(info.getLog("reading... -", "- " + Utils.skipDir(target.getPath(), info.getRootDirectory(), ROOT_DIRECTORY)));
+		log.info(info.getLog("reading... -", "- " + Utils.skipDir(target.getPath(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
 		
 		List<Photo> photos = null;
 		try {
@@ -140,13 +138,13 @@ public class PhotoService {
 			collectedPhotos.add(photo);
 			
 			info.addCollectPhotoCount();
-			log.info(info.getLog("collected. -", "- " + Utils.skipDir(photo.getSource(), info.getRootDirectory(), ROOT_DIRECTORY)));
+			log.info(info.getLog("collected. -", "- " + Utils.skipDir(photo.getSource(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
 		}
 		
 		// check sub folder
 		for(File subFile : target.listFiles()) {
 			if(!subFile.isFile()) {
-				collectPhotos(info);
+				collectPhotos(subFile.getPath(), info);
 			}
 		}
 	}
@@ -187,7 +185,7 @@ public class PhotoService {
 	 * 
 	 * @param info
 	 */
-	private void renamePhotos(CollectInfo info) {
+	private void renamePhotos(RenamePhotoInfo info) {
 		// check duplication, counting grouping
 		Map<String, Long> newNameCounts = info.getPhotosMap().values().stream()
 				.flatMap(photos -> photos.stream())
@@ -210,11 +208,14 @@ public class PhotoService {
 					boolean duplication = newNameCounts.get(uniqueNewName) > 1;
 					String newName = getNewName(photo, info.isNumbering() ? number++ : null, duplication);
 					
-					renamePhoto(photo, newName);
+					// rename
+					String newSource = fileService.renameFile(photo.getSource(), newName);
+					photo.setSource(newSource);
+					
 					info.addCompletedPhotoCount();
 					
 					File newFile = new File(photo.getSource());
-					log.info(info.getLog("renamed. -", "- " + Utils.skipDir(originFile.getParent(), info.getRootDirectory(), ROOT_DIRECTORY) + " - " + originFile.getName() +  " -> " + newFile.getName()));
+					log.info(info.getLog("renamed. -", "- " + Utils.skipDir(originFile.getParent(), info.getRootDirectory(), Constants.ROOT_DIRECTORY) + " - " + originFile.getName() +  " -> " + newFile.getName()));
 					
 					if(duplication) {
 						info.getDuplicatedSources().add(photo.getSource());
@@ -263,22 +264,5 @@ public class PhotoService {
 //		newName = date + "-" + time + (numbering == null ? "" : "-" + numbering + "." + extension);
 		
 		return newName;
-	}
-	
-	/**
-	 * rename of the photo
-	 * 
-	 * @param photo
-	 * @param newName
-	 * @throws IOException
-	 */
-	public void renamePhoto(Photo photo, String newName) throws IOException {
-		File file = new File(photo.getSource());
-		
-		Path path = Paths.get(photo.getSource());
-		Files.move(path, path.resolveSibling(newName));
-		
-		file = new File(file.getParent() + "\\" + newName);
-		photo.setSource(file.getPath());
 	}
 }
