@@ -163,10 +163,6 @@ public class PhotoService {
 		int pos = file.getName().lastIndexOf(".");
 		String name = file.getName().substring(0, pos);
 		
-		if(name.equals("20200228_200432.259_+0900_00001_00000")) {
-			System.out.println(1);
-		}
-		
 		LocalDateTime localDateTime = null;
 		ZonedDateTime zonedDateTime = null;
 		if(photo.getExifInfo(Photo.DATETIME_ORIGINAL) != null) {
