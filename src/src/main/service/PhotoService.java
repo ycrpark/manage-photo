@@ -177,15 +177,15 @@ public class PhotoService {
 			localDateTime = LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("yyyyMMdd_HHmmssSSS"));
 			// zonedDateTime = ZonedDateTime.of(localDateTime, ZoneId.of("Asia/Seoul"));
 		} else if(name.length() >= 19 && name.indexOf("-") == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15) {
-			// origin photoSync format
-			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern("yyyyMMdd" + Constants.NAME_SEPARATOR + "HHmmss" + Constants.MILLISEC_SEPARATOR + "SSS"));
+			// photoSync old version format
+			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss.SSS"));
 		} else if(name.length() >= 24 && name.indexOf(Constants.NAME_SEPARATOR) == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15
 				&& (name.indexOf("+") == 19 || name.indexOf("-") == 19)) {
-			// photoSync format
-			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern("yyyyMMdd" + Constants.NAME_SEPARATOR + "HHmmss" + Constants.MILLISEC_SEPARATOR + "SSS"));
+			// photoSync contains offset format
+			localDateTime = LocalDateTime.parse(name.substring(0, 24), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT_CONTAINS_OFFSET));
 		} else if(name.length() >= 19 && name.indexOf(Constants.NAME_SEPARATOR) == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15) {
 			// photoSync format
-			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern("yyyyMMdd" + Constants.NAME_SEPARATOR + "HHmmss" + Constants.MILLISEC_SEPARATOR + "SSS"));
+			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT));
 		} else if(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE) != null) {
 			zonedDateTime = ZonedDateTime.parse(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ssXXX"));
 			localDateTime = zonedDateTime.toLocalDateTime();
@@ -280,7 +280,7 @@ public class PhotoService {
 			dateTime = ZonedDateTime.of(photo.getLocalDateTime(), ZoneOffset.UTC);
 		}
 		
-		String datetimeName = dateTime.format(DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT));
+		String datetimeName = dateTime.format(DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT_CONTAINS_OFFSET));
 		StringBuilder newName = new StringBuilder();
 		
 		// yyyyMMdd_HHmmss.SSS_+0900_00001_00001.jpg
@@ -340,11 +340,11 @@ public class PhotoService {
 				Photo photo = exifToolService.getPhoto(target.getPath(), null);
 				parseInfo(photo);
 				
-				ZonedDateTime zonedDateTime = ZonedDateTime.parse(target.getName(), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT));
-				LocalDateTime localDateTime = zonedDateTime.toLocalDateTime();
-				boolean success = exifToolService.updateDate(photo.getSource(), zonedDateTime, localDateTime);
+//				ZonedDateTime zonedDateTime = ZonedDateTime.parse(target.getName(), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT_CONTAINS_OFFSET));
+//				LocalDateTime localDateTime = zonedDateTime.toLocalDateTime();
+//				boolean success = exifToolService.updateDate(photo.getSource(), zonedDateTime, localDateTime);
 				
-//				boolean success = exifToolService.updateDate(photo.getSource(), photo.getZonedDateTime(), photo.getLocalDateTime());
+				boolean success = exifToolService.updateDate(photo.getSource(), photo.getZonedDateTime(), photo.getLocalDateTime());
 				if(success) {
 					info.addCompletedPhotoCount();
 					log.info(info.getLog("updated. -", "- " + Utils.skipDir(photo.getSource(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
