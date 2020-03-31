@@ -279,18 +279,12 @@ public class PhotoService {
 		if(dateTime == null) {
 			dateTime = ZonedDateTime.of(photo.getLocalDateTime(), ZoneOffset.UTC);
 		}
-		String date = dateTime.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-		String time = dateTime.format(DateTimeFormatter.ofPattern("HHmmss"));
-		String ms = dateTime.format(DateTimeFormatter.ofPattern("SSS"));
-		String offset = dateTime.format(DateTimeFormatter.ofPattern("xxxx"));
 		
-		
+		String datetimeName = dateTime.format(DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT));
 		StringBuilder newName = new StringBuilder();
 		
 		// yyyyMMdd_HHmmss.SSS_+0900_00001_00001.jpg
-		newName.append(date);
-		newName.append(Constants.NAME_SEPARATOR).append(time).append(Constants.MILLISEC_SEPARATOR).append(ms);
-		newName.append(Constants.NAME_SEPARATOR).append(offset);
+		newName.append(datetimeName);
 		newName.append(Constants.NAME_SEPARATOR).append("00001");
 		newName.append(Constants.NAME_SEPARATOR).append(number == null ? "00000" : Utils.lPad(String.valueOf(number), 5, "0"));
 		if(duplication) {
@@ -306,6 +300,9 @@ public class PhotoService {
 		return newName.toString();
 	}
 	
+	/**
+	 * update all photos meta data inside the folder
+	 */
 	public void updatePhotos(String source) {
 		long start = System.currentTimeMillis();
 		
@@ -316,7 +313,7 @@ public class PhotoService {
 		info.setFailedPhotoSources(new ArrayList<>());
 		
 		try {
-//			updatePhotos(source, info);
+			updatePhotos(source, info);
 			log.info(info.getLog("#####updatePhotos completed.#####", "#####updatePhotos completed.#####\n"));
 		} catch(Exception e) {
 			log.severe(e.toString());
@@ -330,72 +327,48 @@ public class PhotoService {
 		}
 	}
 	
-//	private void updatePhotos(String source, UpdatePhotoInfo info) {
-//		File target = new File(source);
-//		
-//		// photo
-//		if(target.isFile()) {
-//			Photo photo = null;
-//			try {
-//				photo = exifToolService.getPhoto(target.getPath(), null);
-//				parseInfo(photo);
-//				
-//				
-//				LocalDateTime localDateTime = LocalDateTime.parse(target.getName(), DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss.SSS"));
-//				ZonedDateTime zonedDateTime = ZonedDateTime.of(localDateTime, ZoneOffset.of);
-//				
-//				photo = exifToolService.getPhoto(target.getPath(), info);
-//			} catch(IOException | InterruptedException e) {
-//				log.severe("failed read metadata: " + target.getPath() + "\n" + e.toString());
-//				return;
-//			}
-//			
-//			String photosKey = target.getParent();
-//			// if root directory
-//			if(photosKey == null) {
-//				photosKey = Constants.ROOT_DIRECTORY;
-//			}
-//			
-//			List<Photo> collectedPhotos = info.getPhotosMap().computeIfAbsent(photosKey, key -> new LinkedList<>());
-//			parseInfo(photo);
-//			collectedPhotos.add(photo);
-//			
-//			info.addCollectPhotoCount();
-//			log.info(info.getLog("collected. -", "- " + Utils.skipDir(target.getPath(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
-//			
-//			return;
-//		}
-//		
-//		
-//		// folder
-//		info.addReadDirectoryCount();
-//		log.info(info.getLog("reading... -", "- " + Utils.skipDir(target.getPath(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
-//		
-//		List<Photo> photos = null;
-//		try {
-//			photos = exifToolService.getPhotos(target.getPath(), info);
-//		} catch(IOException | InterruptedException e) {
-//			log.severe("failed read metadata: " + target.getPath() + "\n" + e.toString());
-//			info.setErrorMessage("failed read metadata. src: " + target.getPath());
-//			return;
-//		}
-//		
-//		List<Photo> collectedPhotos = info.getPhotosMap().computeIfAbsent(target.getPath(), key -> new LinkedList<>());
-//		
-//		// parse data
-//		for(Photo photo : photos) {
-//			parseInfo(photo);
-//			collectedPhotos.add(photo);
-//			
-//			info.addCollectPhotoCount();
-//			log.info(info.getLog("collected. -", "- " + Utils.skipDir(photo.getSource(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
-//		}
-//		
-//		// check sub folder
-//		for(File subFile : target.listFiles()) {
-//			if(!subFile.isFile()) {
-//				collectPhotos(subFile.getPath(), info);
-//			}
-//		}
-//	}
+	/**
+	 * update date of exif meta data
+	 * all photos inside the folder, inside folder... using DFS
+	 */
+	private void updatePhotos(String source, UpdatePhotoInfo info) {
+		File target = new File(source);
+		
+		// photo
+		if(target.isFile()) {
+			try {
+				Photo photo = exifToolService.getPhoto(target.getPath(), null);
+				parseInfo(photo);
+				
+				ZonedDateTime zonedDateTime = ZonedDateTime.parse(target.getName(), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT));
+				LocalDateTime localDateTime = zonedDateTime.toLocalDateTime();
+				boolean success = exifToolService.updateDate(photo.getSource(), zonedDateTime, localDateTime);
+				
+//				boolean success = exifToolService.updateDate(photo.getSource(), photo.getZonedDateTime(), photo.getLocalDateTime());
+				if(success) {
+					info.addCompletedPhotoCount();
+					log.info(info.getLog("updated. -", "- " + Utils.skipDir(photo.getSource(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
+				} else {
+					info.addFailPhotoCount();
+					info.getFailedPhotoSources().add(photo.getSource());
+					log.info(info.getLog("failed. -", "- " + Utils.skipDir(photo.getSource(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
+				}
+			} catch(IOException | InterruptedException e) {
+				log.severe("failed updatePhotos: " + target.getPath() + "\n" + e.toString());
+				return;
+			}
+			
+			return;
+		}
+		
+		// folder
+		info.addReadDirectoryCount();
+		log.info(info.getLog("read dir -", "- " + Utils.skipDir(target.getPath(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
+		
+		// folder
+		File[] subFiles = target.listFiles();
+		for (File subFile : subFiles) {
+			updatePhotos(subFile.getPath(), info);
+		}
+	}
 }

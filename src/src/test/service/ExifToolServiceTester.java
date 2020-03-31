@@ -55,7 +55,7 @@ public class ExifToolServiceTester {
 		String source = "C:\\Users\\ycrpa\\Downloads\\test\\move2\\P20200204_224328541_E1A31B3C-CB5E-49CE-82CA-54F13A0510B5.JPG";
 		ZonedDateTime zonedDateTime = ZonedDateTime.parse("20201010131315 333+04:00", DateTimeFormatter.ofPattern("yyyyMMddHHmmss SSSXXX"));
 		try {
-			boolean success = exifToolService.setDate(source, zonedDateTime, zonedDateTime.toLocalDateTime());
+			boolean success = exifToolService.updateDate(source, zonedDateTime, zonedDateTime.toLocalDateTime());
 			if(!success) {
 				fail();
 			}

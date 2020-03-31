@@ -12,11 +12,18 @@ public class PhotoServiceTester {
 	public static PhotoService photoService = PhotoService.getInstance();
 	
 	@Test
-	public void moveFilesFromFolder() {
+	public void renamePhotos() {
 		String source = "C:\\Users\\ycrpa\\Downloads\\새 폴더\\test";
 		long start = System.currentTimeMillis();
 		photoService.renamePhotos(source, true);
 		log.info("running time: " + (System.currentTimeMillis() - start));
 	}
 	
+	@Test
+	public void updatePhotos() {
+		String source = "C:\\Users\\ycrpa\\Downloads\\새 폴더\\test";
+		long start = System.currentTimeMillis();
+		photoService.updatePhotos(source);
+		log.info("running time: " + (System.currentTimeMillis() - start));
+	}
 }

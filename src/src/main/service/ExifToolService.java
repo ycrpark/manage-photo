@@ -130,7 +130,7 @@ public class ExifToolService {
 	 * @return
 	 * success or not
 	 */
-	public boolean setDate(String source, ZonedDateTime zonedDateTime, LocalDateTime localDateTime) throws IOException, InterruptedException {
+	public boolean updateDate(String source, ZonedDateTime zonedDateTime, LocalDateTime localDateTime) throws IOException, InterruptedException {
 		List<String> commands = new ArrayList<>();
 		commands.add(appSource);
 		// do not create copies
