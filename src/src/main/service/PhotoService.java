@@ -352,13 +352,20 @@ public class PhotoService {
 //				boolean success = exifToolService.updateDate(photo.getSource(), zonedDateTime, localDateTime);
 				
 				boolean success = exifToolService.updateDate(photo.getSource(), photo.getZonedDateTime(), photo.getLocalDateTime());
+				
+				String dateTime = null;
+				if(photo.getZonedDateTime() != null) {
+					dateTime = photo.getZonedDateTime().format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSXXX"));
+				} else {
+					dateTime = photo.getLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSS"));
+				}
 				if(success) {
 					info.addCompletedPhotoCount();
-					log.info(info.getLog("updated. -", "- " + Utils.skipDir(photo.getSource(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
+					log.info(info.getLog("updated. -", "- " + dateTime + " - " + Utils.skipDir(photo.getSource(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
 				} else {
 					info.addFailPhotoCount();
 					info.getFailedPhotoSources().add(photo.getSource());
-					log.info(info.getLog("failed. -", "- " + Utils.skipDir(photo.getSource(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
+					log.info(info.getLog("failed. -", "- " + dateTime + " - " + Utils.skipDir(photo.getSource(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
 				}
 			} catch(IOException | InterruptedException e) {
 				log.severe("failed updatePhotos: " + target.getPath() + "\n" + e.toString());
