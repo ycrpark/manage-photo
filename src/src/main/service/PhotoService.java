@@ -163,29 +163,40 @@ public class PhotoService {
 		int pos = file.getName().lastIndexOf(".");
 		String name = file.getName().substring(0, pos);
 		
+		if(name.equals("20200228_200432.259_+0900_00001_00000")) {
+			System.out.println(1);
+		}
+		
 		LocalDateTime localDateTime = null;
 		ZonedDateTime zonedDateTime = null;
 		if(photo.getExifInfo(Photo.DATETIME_ORIGINAL) != null) {
 			zonedDateTime = ZonedDateTime.parse(photo.getExifInfo(Photo.DATETIME_ORIGINAL), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSXXX"));
 			localDateTime = zonedDateTime.toLocalDateTime();
+			
 		} else if(photo.getExifInfo(Photo.CREATE_DATE) != null) {
 			zonedDateTime = ZonedDateTime.parse(photo.getExifInfo(Photo.CREATE_DATE), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSXXX"));
 			localDateTime = zonedDateTime.toLocalDateTime();
+			
 		} else if(name.startsWith("P") || name.startsWith("V")) {
 			// naver cloud format
 			String dateStr = name.substring(1, 19);
 			localDateTime = LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("yyyyMMdd_HHmmssSSS"));
 			// zonedDateTime = ZonedDateTime.of(localDateTime, ZoneId.of("Asia/Seoul"));
+			
 		} else if(name.length() >= 19 && name.indexOf("-") == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15) {
 			// photoSync old version format
 			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss.SSS"));
-		} else if(name.length() >= 24 && name.indexOf(Constants.NAME_SEPARATOR) == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15
-				&& (name.indexOf("+") == 19 || name.indexOf("-") == 19)) {
+			
+		} else if(name.length() >= 25 && name.indexOf(Constants.NAME_SEPARATOR) == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15
+				&& (name.indexOf("+") == 20 || name.indexOf("-") == 20)) {
 			// photoSync contains offset format
-			localDateTime = LocalDateTime.parse(name.substring(0, 24), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT_CONTAINS_OFFSET));
+			zonedDateTime = ZonedDateTime.parse(name.substring(0, 25), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT_CONTAINS_OFFSET));
+			localDateTime = zonedDateTime.toLocalDateTime();
+			
 		} else if(name.length() >= 19 && name.indexOf(Constants.NAME_SEPARATOR) == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15) {
 			// photoSync format
 			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT));
+			
 		} else if(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE) != null) {
 			zonedDateTime = ZonedDateTime.parse(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ssXXX"));
 			localDateTime = zonedDateTime.toLocalDateTime();
