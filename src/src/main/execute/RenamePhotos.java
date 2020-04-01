@@ -11,7 +11,7 @@ public class RenamePhotos {
 	 */
 	public static void main(String[] args) {
 		// photo file or directory path
-		String source = "C:\\Users\\ycrpa\\Downloads\\새 폴더\\test";
-		photoService.renamePhotos(source, false);
+		String source = "C:\\Users\\ycrpa\\Downloads\\test";
+		photoService.renamePhotos(source, false, true);
 	}
 }

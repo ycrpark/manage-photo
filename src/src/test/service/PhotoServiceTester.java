@@ -15,7 +15,7 @@ public class PhotoServiceTester {
 	public void renamePhotos() {
 		String source = "C:\\Users\\ycrpa\\Downloads\\새 폴더\\test";
 		long start = System.currentTimeMillis();
-		photoService.renamePhotos(source, true);
+		photoService.renamePhotos(source, true, false);
 		log.info("running time: " + (System.currentTimeMillis() - start));
 	}
 	

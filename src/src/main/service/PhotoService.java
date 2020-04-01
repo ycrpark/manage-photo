@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 
 import src.main.comm.Constants;
 import src.main.comm.CustomLogger;
+import src.main.model.Photo;
 import src.main.model.RenamePhotoInfo;
 import src.main.model.UpdatePhotoInfo;
-import src.main.model.Photo;
 import src.main.util.Utils;
 
 public class PhotoService {
@@ -51,11 +51,12 @@ public class PhotoService {
 	 * @param numbering
 	 * numbering or not
 	 */
-	public void renamePhotos(String source, boolean numbering) {
+	public void renamePhotos(String source, boolean numbering, boolean autoSequence) {
 		long start = System.currentTimeMillis();
 		
 		RenamePhotoInfo info = new RenamePhotoInfo();
 		info.setNumbering(numbering);
+		info.setAutoSequence(autoSequence);
 		info.setPhotosMap(new HashMap<String, List<Photo>>());
 		info.setDuplicatedSources(new ArrayList<String>());
 		
@@ -165,13 +166,25 @@ public class PhotoService {
 		
 		LocalDateTime localDateTime = null;
 		ZonedDateTime zonedDateTime = null;
-		if(photo.getExifInfo(Photo.DATETIME_ORIGINAL) != null) {
-			zonedDateTime = ZonedDateTime.parse(photo.getExifInfo(Photo.DATETIME_ORIGINAL), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSXXX"));
-			localDateTime = zonedDateTime.toLocalDateTime();
+		if(Utils.validDateText(photo.getExifInfo(Photo.DATETIME_ORIGINAL)) || Utils.validDateText(photo.getExifInfo(Photo.CREATE_DATE))) {
+			String dateText = Utils.validDateText(photo.getExifInfo(Photo.DATETIME_ORIGINAL)) ? photo.getExifInfo(Photo.DATETIME_ORIGINAL) : photo.getExifInfo(Photo.CREATE_DATE);
 			
-		} else if(photo.getExifInfo(Photo.CREATE_DATE) != null) {
-			zonedDateTime = ZonedDateTime.parse(photo.getExifInfo(Photo.CREATE_DATE), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSXXX"));
-			localDateTime = zonedDateTime.toLocalDateTime();
+			if(Utils.containsAny(dateText, "+", "-")) {
+				zonedDateTime = ZonedDateTime.parse(dateText, DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSXXX"));
+				localDateTime = zonedDateTime.toLocalDateTime();
+			} else {
+				if(dateText.length() == 19) {
+					localDateTime = LocalDateTime.parse(dateText, DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss"));
+				} else if(dateText.length() == 21) {
+					localDateTime = LocalDateTime.parse(dateText, DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.S"));
+				} else if(dateText.length() == 22) {
+					localDateTime = LocalDateTime.parse(dateText, DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SS"));
+				} else if(dateText.length() == 23) {
+					localDateTime = LocalDateTime.parse(dateText, DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSS"));
+				} else if(dateText.length() == 24) {
+					localDateTime = LocalDateTime.parse(dateText, DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSS"));
+				}
+			}
 			
 		} else if(name.startsWith("P") || name.startsWith("V")) {
 			// naver cloud format
@@ -193,7 +206,7 @@ public class PhotoService {
 			// photoSync format
 			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT));
 			
-		} else if(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE) != null) {
+		} else if(Utils.validDateText(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE))) {
 			zonedDateTime = ZonedDateTime.parse(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ssXXX"));
 			localDateTime = zonedDateTime.toLocalDateTime();
 		}
@@ -204,7 +217,7 @@ public class PhotoService {
 		}
 		
 		if(zonedDateTime == null) {
-			if(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE) != null) {
+			if(Utils.validDateText(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE))) {
 				ZoneId zoneId = ZonedDateTime.parse(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ssXXX")).getZone();
 				zonedDateTime = ZonedDateTime.of(localDateTime, zoneId);
 			}
@@ -221,10 +234,10 @@ public class PhotoService {
 	 * @param info
 	 */
 	private void renamePhotos(RenamePhotoInfo info) {
-		// check duplication, counting grouping
-		Map<String, Long> newNameCounts = info.getPhotosMap().values().stream()
+		// check duplication
+		Map<String, List<String>> newNameCounts = info.getPhotosMap().values().stream()
 				.flatMap(photos -> photos.stream())
-				.collect(Collectors.groupingBy(photo -> getNewName(photo, null, false), Collectors.counting()));
+				.collect(Collectors.groupingBy(photo -> getNewName(photo, false, null, false, null), Collectors.mapping(Photo::getSource, Collectors.toList())));
 		
 		for(List<Photo> photos : info.getPhotosMap().values()) {
 			// sort for numbering
@@ -233,15 +246,22 @@ public class PhotoService {
 					.thenComparing(photo -> photo.getSource())
 					);
 			
+			int sequence = 1;
 			int number = 1;
+			LocalDateTime dateTime = null;
 			for(Photo photo : photos) {
 				try {
 					File originFile = new File(photo.getSource());
 					
-					String uniqueNewName = getNewName(photo, null, false);
+					String uniqueNewName = getNewName(photo, false, null, false, null);
 					
-					boolean duplication = newNameCounts.get(uniqueNewName) > 1;
-					String newName = getNewName(photo, info.isNumbering() ? number++ : null, duplication);
+					boolean duplication = newNameCounts.get(uniqueNewName).size() > 1;
+					if(!photo.getLocalDateTime().equals(dateTime)) {
+						sequence = 1;
+						dateTime = photo.getLocalDateTime();
+					}
+//					int sequence = newNameCounts.get(uniqueNewName).indexOf(photo.getSource()) + 1;
+					String newName = getNewName(photo, true, info.isNumbering() ? number++ : null, duplication, info.isAutoSequence() ? sequence++ : null);
 					
 					// rename
 					String newSource = fileService.renameFile(photo.getSource(), newName);
@@ -271,15 +291,15 @@ public class PhotoService {
 	 * @param photo
 	 * @param number
 	 * nullable 00000
-	 * @param duplication
+	 * @param sequence
 	 * if duplication append orignal file name
 	 * @return
 	 */
-	private String getNewName(Photo photo, Integer number, boolean duplication) {
+	private String getNewName(Photo photo, boolean containsExt, Integer number, boolean duplication, Integer sequence) {
 		File file = new File(photo.getSource());
 		int pos = file.getName().lastIndexOf(".");
 		String name = file.getName().substring(0, pos);
-		String extension = file.getName().substring(pos + 1);
+		String extension = file.getName().substring(pos + 1).toUpperCase();
 		
 		ZonedDateTime dateTime = photo.getZonedDateTime();
 		// set +00:00
@@ -287,17 +307,20 @@ public class PhotoService {
 			dateTime = ZonedDateTime.of(photo.getLocalDateTime(), ZoneOffset.UTC);
 		}
 		
-		String datetimeName = dateTime.format(DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT_CONTAINS_OFFSET));
+		String datetimeName = dateTime.format(DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT));
 		StringBuilder newName = new StringBuilder();
 		
 		// yyyyMMdd_HHmmss.SSS_+0900_00001_00001.jpg
 		newName.append(datetimeName);
-		newName.append(Constants.NAME_SEPARATOR).append("00001");
+		newName.append(Constants.NAME_SEPARATOR).append(sequence == null ? "00001" : Utils.lPad(String.valueOf(sequence), 5, "0"));
 		newName.append(Constants.NAME_SEPARATOR).append(number == null ? "00000" : Utils.lPad(String.valueOf(number), 5, "0"));
-		if(duplication) {
+		if(duplication && sequence == null) {
 			newName.append(Constants.NAME_SEPARATOR).append(name);
 		}
-		newName.append(".").append(extension);
+		
+		if(containsExt) {
+			newName.append(".").append(extension);
+		}
 		
 		// yyyyMMdd-HHmmss-0001-image.jpg
 //		newName = date + "-" + time + (numbering == null ? "" : "-" + numbering) + "-" + file.getName();
