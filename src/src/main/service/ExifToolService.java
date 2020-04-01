@@ -110,6 +110,10 @@ public class ExifToolService {
 			}
 		}
 		
+		if(file.isFile() && info != null) {
+			info.addReadPhotoCount();
+		}
+		
 		BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 		while((line = errorReader.readLine()) != null) {
 			int divi = line.indexOf(":");

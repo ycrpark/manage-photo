@@ -7,16 +7,6 @@ import src.main.util.Utils;
 
 public class RenamePhotoInfo {
 	/**
-	 * do numbering or not
-	 */
-	private boolean numbering;
-	
-	/**
-	 * do auto sequencing or not
-	 */
-	private boolean autoSequence;
-	
-	/**
 	 * collected photos for numbering by folder
 	 */
 	private Map<String, List<Photo>> photosMap;
@@ -40,22 +30,6 @@ public class RenamePhotoInfo {
 	private int completedPhotoCount;
 	
 	private String errorMessage;
-	
-	public boolean isNumbering() {
-		return numbering;
-	}
-	
-	public void setNumbering(boolean numbering) {
-		this.numbering = numbering;
-	}
-	
-	public boolean isAutoSequence() {
-		return autoSequence;
-	}
-	
-	public void setAutoSequence(boolean autoSequence) {
-		this.autoSequence = autoSequence;
-	}
 	
 	public Map<String, List<Photo>> getPhotosMap() {
 		return photosMap;

@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 import org.junit.Test;
 
 import src.main.comm.CustomLogger;
+import src.main.model.RenamePhotoCriteria;
 import src.main.service.PhotoService;
 
 public class PhotoServiceTester {
@@ -15,7 +16,13 @@ public class PhotoServiceTester {
 	public void renamePhotos() {
 		String source = "C:\\Users\\ycrpa\\Downloads\\새 폴더\\test";
 		long start = System.currentTimeMillis();
-		photoService.renamePhotos(source, true, false);
+		
+		RenamePhotoCriteria criteria = new RenamePhotoCriteria();
+		criteria.setAutoSequence(true);
+//		criteria.setNumbering(true);
+//		criteria.setAppendOriginal(true);
+		
+		photoService.renamePhotos(source, criteria);
 		log.info("running time: " + (System.currentTimeMillis() - start));
 	}
 	

@@ -18,7 +18,9 @@ import java.util.stream.Collectors;
 
 import src.main.comm.Constants;
 import src.main.comm.CustomLogger;
+import src.main.model.NameCriteria;
 import src.main.model.Photo;
+import src.main.model.RenamePhotoCriteria;
 import src.main.model.RenamePhotoInfo;
 import src.main.model.UpdatePhotoInfo;
 import src.main.util.Utils;
@@ -51,12 +53,10 @@ public class PhotoService {
 	 * @param numbering
 	 * numbering or not
 	 */
-	public void renamePhotos(String source, boolean numbering, boolean autoSequence) {
+	public void renamePhotos(String source, RenamePhotoCriteria criteria) {
 		long start = System.currentTimeMillis();
 		
 		RenamePhotoInfo info = new RenamePhotoInfo();
-		info.setNumbering(numbering);
-		info.setAutoSequence(autoSequence);
 		info.setPhotosMap(new HashMap<String, List<Photo>>());
 		info.setDuplicatedSources(new ArrayList<String>());
 		
@@ -67,7 +67,7 @@ public class PhotoService {
 			collectPhotos(source, info);
 			log.info(info.getLog("#####read and collet completed.#####", "#####read and collet completed.#####\n"));
 			if(info.getErrorMessage() == null) {
-				renamePhotos(info);
+				renamePhotos(criteria, info);
 				log.info(info.getLog("#####rename completed.#####", "#####rename completed.#####\n"));
 			}
 			
@@ -233,11 +233,16 @@ public class PhotoService {
 	 * 
 	 * @param info
 	 */
-	private void renamePhotos(RenamePhotoInfo info) {
+	private void renamePhotos(RenamePhotoCriteria criteria, RenamePhotoInfo info) {
 		// check duplication
 		Map<String, List<String>> newNameCounts = info.getPhotosMap().values().stream()
 				.flatMap(photos -> photos.stream())
-				.collect(Collectors.groupingBy(photo -> getNewName(photo, false, null, false, null), Collectors.mapping(Photo::getSource, Collectors.toList())));
+				.collect(Collectors.groupingBy(photo -> {
+					NameCriteria uniqueNameCriteria = new NameCriteria();
+					uniqueNameCriteria.setAppendOriginal(criteria.isAppendOriginal());
+					
+					return getNewName(photo, uniqueNameCriteria);
+				}, Collectors.mapping(Photo::getSource, Collectors.toList())));
 		
 		for(List<Photo> photos : info.getPhotosMap().values()) {
 			// sort for numbering
@@ -253,15 +258,23 @@ public class PhotoService {
 				try {
 					File originFile = new File(photo.getSource());
 					
-					String uniqueNewName = getNewName(photo, false, null, false, null);
+					NameCriteria uniqueNameCriteria = new NameCriteria();
+					uniqueNameCriteria.setAppendOriginal(criteria.isAppendOriginal());
+					String uniqueNewName = getNewName(photo, uniqueNameCriteria);
 					
 					boolean duplication = newNameCounts.get(uniqueNewName).size() > 1;
 					if(!photo.getLocalDateTime().equals(dateTime)) {
 						sequence = 1;
 						dateTime = photo.getLocalDateTime();
 					}
-//					int sequence = newNameCounts.get(uniqueNewName).indexOf(photo.getSource()) + 1;
-					String newName = getNewName(photo, true, info.isNumbering() ? number++ : null, duplication, info.isAutoSequence() ? sequence++ : null);
+					
+					NameCriteria nameCriteria = new NameCriteria();
+					nameCriteria.setDuplication(duplication);
+					nameCriteria.setNumber(criteria.isNumbering() ? number++ : null);
+					nameCriteria.setSequence(criteria.isAutoSequence() ? sequence++ : null);
+					nameCriteria.setAppendOriginal(criteria.isAppendOriginal());
+					nameCriteria.setAppendOriginal(true);
+					String newName = getNewName(photo, nameCriteria);
 					
 					// rename
 					String newSource = fileService.renameFile(photo.getSource(), newName);
@@ -295,7 +308,7 @@ public class PhotoService {
 	 * if duplication append orignal file name
 	 * @return
 	 */
-	private String getNewName(Photo photo, boolean containsExt, Integer number, boolean duplication, Integer sequence) {
+	private String getNewName(Photo photo, NameCriteria criteria) {
 		File file = new File(photo.getSource());
 		int pos = file.getName().lastIndexOf(".");
 		String name = file.getName().substring(0, pos);
@@ -312,13 +325,13 @@ public class PhotoService {
 		
 		// yyyyMMdd_HHmmss.SSS_+0900_00001_00001.jpg
 		newName.append(datetimeName);
-		newName.append(Constants.NAME_SEPARATOR).append(sequence == null ? "00001" : Utils.lPad(String.valueOf(sequence), 5, "0"));
-		newName.append(Constants.NAME_SEPARATOR).append(number == null ? "00000" : Utils.lPad(String.valueOf(number), 5, "0"));
-		if(duplication && sequence == null) {
+		newName.append(Constants.NAME_SEPARATOR).append(criteria.getSequence() == null ? "00001" : Utils.lPad(String.valueOf(criteria.getSequence()), 5, "0"));
+		newName.append(Constants.NAME_SEPARATOR).append(criteria.getNumber() == null ? "00000" : Utils.lPad(String.valueOf(criteria.getNumber()), 5, "0"));
+		if(criteria.isAppendOriginal() || criteria.isDuplication() && criteria.getSequence() == null) {
 			newName.append(Constants.NAME_SEPARATOR).append(name);
 		}
 		
-		if(containsExt) {
+		if(criteria.isContainsExt()) {
 			newName.append(".").append(extension);
 		}
 		
