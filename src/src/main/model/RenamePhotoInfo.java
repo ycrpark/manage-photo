@@ -17,6 +17,16 @@ public class RenamePhotoInfo {
 	private Map<String, List<String>> duplicatedSources;
 	
 	/**
+	 * merged directory names
+	 */
+	private Map<String, List<String>> mergedDirectories;
+	
+	/**
+	 * before rename, after sources
+	 */
+	private Map<String, String> renameSources;
+	
+	/**
 	 * root path
 	 */
 	private String rootDirectory;
@@ -45,6 +55,22 @@ public class RenamePhotoInfo {
 	
 	public void setDuplicatedSources(Map<String, List<String>> duplicatedSources) {
 		this.duplicatedSources = duplicatedSources;
+	}
+	
+	public Map<String, List<String>> getMergedDirectories() {
+		return mergedDirectories;
+	}
+	
+	public void setMergedDirectories(Map<String, List<String>> mergedDirectories) {
+		this.mergedDirectories = mergedDirectories;
+	}
+	
+	public Map<String, String> getRenameSources() {
+		return renameSources;
+	}
+	
+	public void setRenameSources(Map<String, String> renameSources) {
+		this.renameSources = renameSources;
 	}
 	
 	public int getReadDirectoryCount() {
@@ -121,11 +147,11 @@ public class RenamePhotoInfo {
 		sb.append("readDir: ");
 		sb.append(Utils.lPad(String.valueOf(readDirectoryCount), 2, " "));
 		sb.append(" / readPhoto: ");
-		sb.append(Utils.lPad(String.valueOf(readPhotoCount), 4, " "));
+		sb.append(Utils.lPad(String.valueOf(readPhotoCount), 5, " "));
 		sb.append(" / collectPhoto: ");
-		sb.append(Utils.lPad(String.valueOf(collectPhotoCount), 4, " "));
+		sb.append(Utils.lPad(String.valueOf(collectPhotoCount), 5, " "));
 		sb.append(" / renamePhoto: ");
-		sb.append(Utils.lPad(String.valueOf(completedPhotoCount), 4, " "));
+		sb.append(Utils.lPad(String.valueOf(completedPhotoCount), 5, " "));
 		
 		if(append != null) {
 			sb.append(" ");

@@ -3,6 +3,8 @@ package src.main.service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -15,6 +17,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Scanner;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -57,17 +61,19 @@ public class PhotoService {
 	 * numbering or not
 	 */
 	public void renamePhotos(String source, RenamePhotoCriteria criteria) {
-		long start = System.currentTimeMillis();
+		Instant start = Instant.now();
 		
 		RenamePhotoInfo info = new RenamePhotoInfo();
-		info.setPhotosMap(new LinkedHashMap<String, List<Photo>>());
-		info.setDuplicatedSources(new LinkedHashMap<String, List<String>>());
+		info.setPhotosMap(new LinkedHashMap<>());
+		info.setDuplicatedSources(new LinkedHashMap<>());
+		info.setMergedDirectories(new LinkedHashMap<>());
+		info.setRenameSources(new LinkedHashMap<>());
 		
 		File file = new File(source);
 		info.setRootDirectory(file.isFile() ? file.getParent() : file.getPath());
 		
 		try {
-			collectPhotos(source, info);
+			collectPhotos(source, criteria, info);
 			log.info(info.getLog("#####read and collet completed.#####", "#####read and collet completed.#####\n"));
 			if(info.getErrorMessage() == null) {
 				renamePhotos(criteria, info);
@@ -82,19 +88,48 @@ public class PhotoService {
 			e.printStackTrace();
 		}
 		
-		log.info("renamePhotos run-time: " + (System.currentTimeMillis() - start) + "ms");
+		// start logging info
+		if(!info.getDuplicatedSources().isEmpty()) {
+			log.info("--------------------------------------------------------------------------------------------------------------------\n");
+		}
 		
 		for(List<String> srcs : info.getDuplicatedSources().values()) {
 			srcs.sort(Comparator.comparing(src -> Paths.get(src).getFileName().toString(), new WindowsExplorerComparator()));
 			for(String src : srcs) {
-				log.warning("duplicated. " + Utils.skipDir(src, info.getRootDirectory(), Constants.ROOT_DIRECTORY));
+				log.warning("duplicated datetime. " + Utils.skipDir(src, info.getRootDirectory(), Constants.ROOT_DIRECTORY));
 			}
 			log.warning("");
 		}
 		
+		log.info("--------------------------------------------------------------------------------------------------------------------\n");
+		log.info(info.getLog("rename result.", null));
+		
+		for(Entry<String, List<String>> entry : info.getMergedDirectories().entrySet()) {
+			log.info("merged directiries: " + entry.getKey() + " <- " + entry.getValue());
+		}
+		
 		if(!info.getDuplicatedSources().isEmpty()) {
 			long count = info.getDuplicatedSources().values().stream().flatMap(srcs -> srcs.stream()).count();
-			log.warning("#####duplicated.##### " + info.getDuplicatedSources().size() + " kinds, " + count + "items. #####duplicated.#####");
+			log.warning("duplicated datetime. " + info.getDuplicatedSources().size() + " kinds, " + count + "items.");
+		}
+		
+		Duration dur = Duration.between(start, Instant.now());
+		log.info("run-time: " + dur.toMinutes() + "m " + dur.minusMinutes(dur.toMinutes()).getSeconds() + "s");
+		
+		if(criteria.isTest()) {
+			return;
+		}
+		
+		// rollback
+		log.info("");
+		System.out.print("rollBack? (y/n): ");
+		try(Scanner sc = new Scanner(System.in)) {
+			if(sc.nextLine().toUpperCase().equals("Y")) {
+				rollbackRenames(info);
+			}
+		} catch(IOException e) {
+			log.severe(e.toString());
+			e.printStackTrace();
 		}
 	}
 	
@@ -103,7 +138,7 @@ public class PhotoService {
 	 * 
 	 * @param info
 	 */
-	private void collectPhotos(String source, RenamePhotoInfo info) {
+	private void collectPhotos(String source, RenamePhotoCriteria criteria, RenamePhotoInfo info) {
 		File target = new File(source);
 		
 		// photo
@@ -124,7 +159,7 @@ public class PhotoService {
 			}
 			
 			List<Photo> collectedPhotos = info.getPhotosMap().computeIfAbsent(photosKey, key -> new LinkedList<>());
-			parseInfo(photo);
+			parseInfo(photo, criteria.getMaintainsNumberingDirectories());
 			collectedPhotos.add(photo);
 			
 			info.addCollectPhotoCount();
@@ -136,6 +171,7 @@ public class PhotoService {
 		
 		// folder
 		info.addReadDirectoryCount();
+		log.info("");
 		log.info(info.getLog("reading... -", "- " + Utils.skipDir(target.getPath(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)));
 		
 		List<Photo> photos = null;
@@ -151,7 +187,7 @@ public class PhotoService {
 		
 		// parse data
 		for(Photo photo : photos) {
-			parseInfo(photo);
+			parseInfo(photo, criteria.getMaintainsNumberingDirectories());
 			collectedPhotos.add(photo);
 			
 			info.addCollectPhotoCount();
@@ -162,7 +198,7 @@ public class PhotoService {
 		Arrays.stream(target.listFiles())
 				.filter(subFile -> subFile.isDirectory())
 				.sorted(Comparator.comparing(subFile -> subFile.getPath(), new WindowsExplorerComparator()))
-				.forEach(subFile -> collectPhotos(subFile.getPath(), info));
+				.forEach(subFile -> collectPhotos(subFile.getPath(), criteria, info));
 	}
 	
 	/**
@@ -170,7 +206,7 @@ public class PhotoService {
 	 * 
 	 * @param photo
 	 */
-	private void parseInfo(Photo photo) {
+	private void parseInfo(Photo photo, Map<String, List<String>> maintainsNumberingDirectories) {
 		File file = new File(photo.getSource());
 		int pos = file.getName().lastIndexOf(".");
 		String name = file.getName().substring(0, pos);
@@ -256,16 +292,37 @@ public class PhotoService {
 		
 		// numbering
 		if(numbering == null) {
-			if(name.startsWith("KAWA")) {
-				// gaeul
-//			numbering = "0" + name.substring(4, 8);
-				numbering = "0" + name.substring(4);
-			} else if(name.startsWith("lyr ")) {
+			if(name.startsWith("lyr ")) {
 				// snap
 				numbering = "1" + Utils.lPad(name.substring(name.indexOf("(") + 1, name.lastIndexOf(")")), 4, "0");
 			} else if(name.startsWith("lyr_2 ")) {
 				// snap
 				numbering = "2" + Utils.lPad(name.substring(name.indexOf("(") + 1, name.lastIndexOf(")")), 4, "0");
+			}
+		}
+		
+		// maintains numbering
+		if(numbering == null && maintainsNumberingDirectories != null) {
+			String folderName = Paths.get(file.getParent()).getFileName().toString();
+			
+			for(Entry<String, List<String>> entry : maintainsNumberingDirectories.entrySet()) {
+				if(name.startsWith(entry.getKey()) && (entry.getValue() == null || entry.getValue().contains(folderName))) {
+					String tempNumbering = name.substring(entry.getKey().length());
+					Integer endIdx = null;
+					for(int i = tempNumbering.length(); i > 0; i--) {
+						try {
+							Integer.parseInt(tempNumbering.substring(0, i));
+							endIdx = i;
+							break;
+						} catch(Exception e) {
+							continue;
+						}
+					}
+					
+					if(endIdx != null) {
+						numbering = Utils.lPad(tempNumbering, tempNumbering.length() + (5 - endIdx), "0");
+					}
+				}
 			}
 		}
 		
@@ -289,12 +346,36 @@ public class PhotoService {
 				.collect(Collectors.groupingBy(photo -> {
 					NameCriteria uniqueNameCriteria = new NameCriteria();
 					uniqueNameCriteria.setAppendOriginal(criteria.isAppendOriginal());
-					uniqueNameCriteria.setContainsExt(true);
+//					uniqueNameCriteria.setContainsExt(true);
 					
 					return getNewName(photo, uniqueNameCriteria);
 				}, Collectors.mapping(Photo::getSource, Collectors.toList())));
 		
-		for(List<Photo> photos : info.getPhotosMap().values()) {
+		
+		// merge folder
+		Map<String, List<Photo>> mergedPhotosMap = info.getPhotosMap().entrySet().stream().collect(Collectors.toMap(entry -> {
+					if(criteria.getMergeDirectirySuffixes() == null) {
+						return entry.getKey();
+					}
+					
+					for(String suffix : criteria.getMergeDirectirySuffixes()) {
+						if(entry.getKey().lastIndexOf(suffix) == entry.getKey().length() - suffix.length()) {
+							String mergedDirectory = entry.getKey().substring(0, entry.getKey().length() - suffix.length());
+							
+							if(info.getPhotosMap().containsKey(mergedDirectory)) {
+								info.getMergedDirectories().computeIfAbsent(mergedDirectory, k -> new ArrayList<>()).add(entry.getKey());
+								return mergedDirectory;
+							}
+						}
+					}
+					
+					return entry.getKey();
+				}, Entry::getValue, (photos1, photos2) -> {
+					photos1.addAll(photos2);
+					return photos1;
+				}, LinkedHashMap::new));
+		
+		for(List<Photo> photos : mergedPhotosMap.values()) {
 			// sort for numbering
 			photos.sort(photoComparator);
 			
@@ -306,13 +387,14 @@ public class PhotoService {
 						return Integer.parseInt(photo.getOriginalNumber().substring(0, 5));
 					}).max().orElse(0) + 1;
 			
+			log.info("");
 			for(Photo photo : photos) {
 				try {
 					File originFile = new File(photo.getSource());
 					
 					NameCriteria uniqueNameCriteria = new NameCriteria();
 					uniqueNameCriteria.setAppendOriginal(criteria.isAppendOriginal());
-					uniqueNameCriteria.setContainsExt(true);
+//					uniqueNameCriteria.setContainsExt(true);
 					String uniqueNewName = getNewName(photo, uniqueNameCriteria);
 					
 					boolean duplication = newNameCounts.get(uniqueNewName).size() > 1;
@@ -328,6 +410,7 @@ public class PhotoService {
 					
 					// rename
 					String newSource = criteria.isTest() ? originFile.getParent() + "\\" + newName : fileService.renameFile(photo.getSource(), newName);
+					info.getRenameSources().put(photo.getSource(), newSource);
 					photo.setSource(newSource);
 					
 					info.addCompletedPhotoCount();
@@ -391,6 +474,23 @@ public class PhotoService {
 		return newName.toString();
 	}
 	
+	private void rollbackRenames(RenamePhotoInfo info) throws IOException {
+		int completed = 0;
+		for(Entry<String, String> entry : info.getRenameSources().entrySet()) {
+			fileService.renameFile(entry.getValue(), Paths.get(entry.getKey()).getFileName().toString());
+			
+			
+			log.info("rollback. - total: " + Utils.lPad(String.valueOf(info.getRenameSources().size()), 5, " ")
+					+ " / completed: " + Utils.lPad(String.valueOf(++completed), 5, " ") + " - "
+					+ Utils.skipDir(Paths.get(entry.getValue()).getParent().toString(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)
+					+ " - " + Paths.get(entry.getValue()).getFileName().toString() +  " -> " + Paths.get(entry.getKey()).getFileName().toString());
+		}
+		
+		log.info("");
+		log.info("rollback completed. - total: " + Utils.lPad(String.valueOf(info.getRenameSources().size()), 5, " ")
+				+ " / completed: " + Utils.lPad(String.valueOf(completed), 5, " "));
+	}
+	
 	/**
 	 * update all photos meta data inside the folder
 	 */
@@ -429,7 +529,7 @@ public class PhotoService {
 		if(target.isFile()) {
 			try {
 				Photo photo = exifToolService.getPhoto(target.getPath(), null);
-				parseInfo(photo);
+				parseInfo(photo, null);
 				
 //				ZonedDateTime zonedDateTime = ZonedDateTime.parse(target.getName(), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT_CONTAINS_OFFSET));
 //				LocalDateTime localDateTime = zonedDateTime.toLocalDateTime();

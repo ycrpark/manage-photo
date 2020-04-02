@@ -79,7 +79,7 @@ public class MoveFileInfo {
 		sb.append("delFolder: ");
 		sb.append(Utils.lPad(String.valueOf(deleteFolderCount), 2, " "));
 		sb.append(" / moveFile: ");
-		sb.append(Utils.lPad(String.valueOf(moveFileCount), 4, " "));
+		sb.append(Utils.lPad(String.valueOf(moveFileCount), 5, " "));
 		
 		if(append != null) {
 			sb.append(" ");

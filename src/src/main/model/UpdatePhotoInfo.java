@@ -83,9 +83,9 @@ public class UpdatePhotoInfo {
 		sb.append("readDir: ");
 		sb.append(Utils.lPad(String.valueOf(readDirectoryCount), 2, " "));
 		sb.append(" / completed: ");
-		sb.append(Utils.lPad(String.valueOf(completedPhotoCount), 4, " "));
+		sb.append(Utils.lPad(String.valueOf(completedPhotoCount), 5, " "));
 		sb.append(" / failed: ");
-		sb.append(Utils.lPad(String.valueOf(failPhotoCount), 4, " "));
+		sb.append(Utils.lPad(String.valueOf(failPhotoCount), 5, " "));
 		
 		if(append != null) {
 			sb.append(" ");
