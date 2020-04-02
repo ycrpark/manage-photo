@@ -5,7 +5,7 @@ public class NameCriteria {
 	
 	private Integer sequence;
 	
-	private Integer number;
+	private String numbering;
 	
 	private boolean appendOriginal;
 	
@@ -27,12 +27,12 @@ public class NameCriteria {
 		this.sequence = sequence;
 	}
 	
-	public Integer getNumber() {
-		return number;
+	public String getNumbering() {
+		return numbering;
 	}
 	
-	public void setNumber(Integer number) {
-		this.number = number;
+	public void setNumbering(String numbering) {
+		this.numbering = numbering;
 	}
 	
 	public boolean isAppendOriginal() {

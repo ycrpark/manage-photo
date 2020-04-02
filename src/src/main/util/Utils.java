@@ -40,6 +40,20 @@ public class Utils {
 		return false;
 	}
 	
+	public static boolean equalsAny(String text, String... anotherTexts) {
+		if(text == null || anotherTexts == null) {
+			return false;
+		}
+		
+		for(String anotherText : anotherTexts) {
+			if(text.equals(anotherText)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	public static boolean validDateText(String text) {
 		return text != null && !text.equals("0000:00:00 00:00:00");
 	}

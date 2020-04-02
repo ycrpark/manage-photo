@@ -105,7 +105,10 @@ public class ExifToolService {
 				divi = line.indexOf(":");
 				if(divi >= 0) {
 //					exifInfos.putIfAbsent(line.substring(0, divi).trim(), line.substring(divi + 1).trim());
-					exifInfos.put(line.substring(0, divi).trim(), line.substring(divi + 1).trim());
+					String key = line.substring(0, divi).trim();
+					if(Utils.equalsAny(key, Photo.DATETIME_ORIGINAL, Photo.CREATE_DATE, Photo.FILE_MODIFICATION_DATE)) {
+						exifInfos.put(key, line.substring(divi + 1).trim());
+					}
 				}
 			}
 		}

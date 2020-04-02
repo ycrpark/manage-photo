@@ -24,6 +24,8 @@ public class Photo {
 	
 	private ZonedDateTime zonedDateTime;
 	
+	private String originalNumber;
+	
 	public String getSource() {
 		return source;
 	}
@@ -58,6 +60,14 @@ public class Photo {
 	
 	public void setZonedDateTime(ZonedDateTime zonedDateTime) {
 		this.zonedDateTime = zonedDateTime;
+	}
+	
+	public String getOriginalNumber() {
+		return originalNumber;
+	}
+	
+	public void setOriginalNumber(String originalNumber) {
+		this.originalNumber = originalNumber;
 	}
 	
 	@Override

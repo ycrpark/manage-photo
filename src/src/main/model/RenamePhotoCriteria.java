@@ -16,6 +16,12 @@ public class RenamePhotoCriteria {
 	 */
 	private boolean appendOriginal;
 	
+	/**
+	 * is test execute
+	 * do not change file name
+	 */
+	private boolean test;
+	
 	public boolean isAutoSequence() {
 		return autoSequence;
 	}
@@ -38,5 +44,13 @@ public class RenamePhotoCriteria {
 	
 	public void setAppendOriginal(boolean appendOriginal) {
 		this.appendOriginal = appendOriginal;
+	}
+	
+	public boolean isTest() {
+		return test;
+	}
+	
+	public void setTest(boolean test) {
+		this.test = test;
 	}
 }

@@ -14,7 +14,7 @@ public class RenamePhotoInfo {
 	/**
 	 * duplicate file names
 	 */
-	private List<String> duplicatedSources;
+	private Map<String, List<String>> duplicatedSources;
 	
 	/**
 	 * root path
@@ -39,11 +39,11 @@ public class RenamePhotoInfo {
 		this.photosMap = photosMap;
 	}
 	
-	public List<String> getDuplicatedSources() {
+	public Map<String, List<String>> getDuplicatedSources() {
 		return duplicatedSources;
 	}
 	
-	public void setDuplicatedSources(List<String> duplicatedSources) {
+	public void setDuplicatedSources(Map<String, List<String>> duplicatedSources) {
 		this.duplicatedSources = duplicatedSources;
 	}
 	

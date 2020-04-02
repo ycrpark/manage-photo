@@ -8,18 +8,19 @@ public class RenamePhotos {
 	/**
 	 * rename the photo's file name to specified format
 	 * target is photo or all photos in a folder, inside folder...
-	 * ex) yyyyMMdd-HHmmss-0001-originName.jpg (taken date)
+	 * ex) yyyyMMdd-HHmmss.SSS-00001-00001.jpg
 	 */
 	public static void main(String[] args) {
 		// photo file or directory path
 //		String source = "C:\\Users\\ycrpa\\Downloads\\test";
-//		String source = "C:\\Users\\ycrpa\\GoogleDrive\\사진\\20200326-091849.272-IMG_36401.JPG";
-		String source = "C:\\Users\\ycrpa\\Downloads\\test\\20191016_155250.010_00001_00000.CR2";
+		String source = "C:\\Users\\ycrpa\\GoogleDrive\\사진";
+//		String source = "C:\\Users\\ycrpa\\Downloads\\test\\20191016_155250.010_00001_00000.CR2";
 		
 		RenamePhotoCriteria criteria = new RenamePhotoCriteria();
 		criteria.setAutoSequence(true);
-//		criteria.setNumbering(true);
+		criteria.setNumbering(true);
 //		criteria.setAppendOriginal(true);
+		criteria.setTest(true);
 		photoService.renamePhotos(source, criteria);
 	}
 }
