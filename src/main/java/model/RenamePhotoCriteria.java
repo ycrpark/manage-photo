@@ -27,7 +27,7 @@ public class RenamePhotoCriteria {
 	/**
 	 * share numbering directories
 	 */
-	private List<String> mergeDirectirySuffixes;
+	private List<String> mergeDirectorySuffixes;
 	
 	/**
 	 * maintains nunbering of file name Map<file prefix, List<directory path>>
@@ -71,12 +71,12 @@ public class RenamePhotoCriteria {
 		this.appendOriginal = appendOriginal;
 	}
 	
-	public List<String> getMergeDirectirySuffixes() {
-		return mergeDirectirySuffixes;
+	public List<String> getMergeDirectorySuffixes() {
+		return mergeDirectorySuffixes;
 	}
 	
-	public void setMergeDirectirySuffixes(List<String> mergeDirectirySuffixes) {
-		this.mergeDirectirySuffixes = mergeDirectirySuffixes;
+	public void setMergeDirectorySuffixes(List<String> mergeDirectorySuffixes) {
+		this.mergeDirectorySuffixes = mergeDirectorySuffixes;
 	}
 	
 	public Map<String, List<String>> getMaintainsNumberingDirectories() {

@@ -42,7 +42,7 @@ public class RenamePhotos {
 		
 		// If a folder's suffix contains list, integrated numbering with the folder excluding the suffix.
 		// ex) if Arrays.asList(" etc"), each proceeds like a single folder {["apple", "apple etc"], ["picture", "picture etc"]}
-		criteria.setMergeDirectirySuffixes(Arrays.asList("기타"));
+		criteria.setMergeDirectorySuffixes(Arrays.asList("기타"));
 		
 		// if folder name contains value list and file name's prefix is key, using numbering
 		// if value list is null, target is all files

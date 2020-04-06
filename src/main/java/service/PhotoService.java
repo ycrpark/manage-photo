@@ -373,11 +373,11 @@ public class PhotoService {
 		
 		// merge folder
 		Map<String, List<Photo>> mergedPhotosMap = info.getPhotosMap().entrySet().stream().collect(Collectors.toMap(entry -> {
-					if(criteria.getMergeDirectirySuffixes() == null) {
+					if(criteria.getMergeDirectorySuffixes() == null) {
 						return entry.getKey();
 					}
 					
-					for(String suffix : criteria.getMergeDirectirySuffixes()) {
+					for(String suffix : criteria.getMergeDirectorySuffixes()) {
 						if(entry.getKey().lastIndexOf(suffix) == entry.getKey().length() - suffix.length()) {
 							String mergedDirectory = entry.getKey().substring(0, entry.getKey().length() - suffix.length());
 							
