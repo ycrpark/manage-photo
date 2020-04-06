@@ -67,6 +67,7 @@ public class PhotoService {
 		info.setPhotosMap(new LinkedHashMap<>());
 		info.setDuplicatedSources(new LinkedHashMap<>());
 		info.setMergedDirectories(new LinkedHashMap<>());
+		info.setRenumberedDirectories(new ArrayList<>());
 		info.setRenameSources(new LinkedHashMap<>());
 		
 		File file = new File(source);
@@ -106,6 +107,10 @@ public class PhotoService {
 		
 		for(Entry<String, List<String>> entry : info.getMergedDirectories().entrySet()) {
 			log.info("merged directiries: " + entry.getKey() + " <- " + entry.getValue());
+		}
+		
+		for(String renumberedPath : info.getRenumberedDirectories()) {
+			log.info("renumbered directiries: " + renumberedPath);
 		}
 		
 		if(!info.getDuplicatedSources().isEmpty()) {
@@ -214,7 +219,34 @@ public class PhotoService {
 		LocalDateTime localDateTime = null;
 		ZonedDateTime zonedDateTime = null;
 		String numbering = null;
-		if(Utils.validDateText(photo.getExifInfo(Photo.DATETIME_ORIGINAL)) || Utils.validDateText(photo.getExifInfo(Photo.CREATE_DATE))) {
+		if(name.length() >= 37 && name.indexOf(Constants.NAME_SEPARATOR) == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15
+				&& (name.indexOf("+") == 20 || name.indexOf("-") == 20)) {
+			// photoSync contains offset format
+			zonedDateTime = ZonedDateTime.parse(name.substring(0, 25), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT_CONTAINS_OFFSET));
+			localDateTime = zonedDateTime.toLocalDateTime();
+			// maintains before numbering
+			numbering = name.substring(32);
+			
+		} else if(name.length() >= 31 && name.indexOf(Constants.NAME_SEPARATOR) == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15) {
+			// photoSync format
+			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT));
+			// maintains before numbering
+			numbering = name.substring(26);
+			
+			if(Utils.validDateText(photo.getExifInfo(Photo.DATETIME_ORIGINAL)) || Utils.validDateText(photo.getExifInfo(Photo.CREATE_DATE))) {
+				String dateText = Utils.validDateText(photo.getExifInfo(Photo.DATETIME_ORIGINAL)) ? photo.getExifInfo(Photo.DATETIME_ORIGINAL) : photo.getExifInfo(Photo.CREATE_DATE);
+				if(Utils.containsAny(dateText, "+", "-")) {
+					ZoneId zoneId = null;
+					if(!dateText.contains(".")) {
+						zoneId = ZonedDateTime.parse(dateText, DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ssXXX")).getZone();
+					} else {
+						zoneId = ZonedDateTime.parse(dateText, DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss.SSSXXX")).getZone();
+					}
+					zonedDateTime = ZonedDateTime.of(localDateTime, zoneId);
+				}
+			}
+			
+		} else if(Utils.validDateText(photo.getExifInfo(Photo.DATETIME_ORIGINAL)) || Utils.validDateText(photo.getExifInfo(Photo.CREATE_DATE))) {
 			String dateText = Utils.validDateText(photo.getExifInfo(Photo.DATETIME_ORIGINAL)) ? photo.getExifInfo(Photo.DATETIME_ORIGINAL) : photo.getExifInfo(Photo.CREATE_DATE);
 			
 			if(Utils.containsAny(dateText, "+", "-")) {
@@ -257,19 +289,6 @@ public class PhotoService {
 			// photoSync old version format
 			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss.SSS"));
 			
-		} else if(name.length() >= 37 && name.indexOf(Constants.NAME_SEPARATOR) == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15
-				&& (name.indexOf("+") == 20 || name.indexOf("-") == 20)) {
-			// photoSync contains offset format
-			zonedDateTime = ZonedDateTime.parse(name.substring(0, 25), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT_CONTAINS_OFFSET));
-			localDateTime = zonedDateTime.toLocalDateTime();
-			// maintains before numbering
-			numbering = name.substring(32);
-			
-		} else if(name.length() >= 31 && name.indexOf(Constants.NAME_SEPARATOR) == 8 && name.indexOf(Constants.MILLISEC_SEPARATOR) == 15) {
-			// photoSync format
-			localDateTime = LocalDateTime.parse(name.substring(0, 19), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT));
-			// maintains before numbering
-			numbering = name.substring(26);
 		} else if(Utils.validDateText(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE))) {
 			zonedDateTime = ZonedDateTime.parse(photo.getExifInfo(Photo.FILE_MODIFICATION_DATE), DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ssXXX"));
 			localDateTime = zonedDateTime.toLocalDateTime();
@@ -375,7 +394,9 @@ public class PhotoService {
 					return photos1;
 				}, LinkedHashMap::new));
 		
-		for(List<Photo> photos : mergedPhotosMap.values()) {
+		for(Entry<String, List<Photo>> entry : mergedPhotosMap.entrySet()) {
+			List<Photo> photos = entry.getValue();
+			
 			// sort for numbering
 			photos.sort(photoComparator);
 			
@@ -386,6 +407,14 @@ public class PhotoService {
 						
 						return Integer.parseInt(photo.getOriginalNumber().substring(0, 5));
 					}).max().orElse(0) + 1;
+			
+			boolean renumbering = false;
+			String folderName = Paths.get(entry.getKey()).getFileName().toString();
+			if(criteria.getRenumberingDirectories() != null && criteria.getRenumberingDirectories().contains(folderName)) {
+				number = 1;
+				renumbering = true;
+				info.getRenumberedDirectories().add(entry.getKey());
+			}
 			
 			log.info("");
 			for(Photo photo : photos) {
@@ -402,19 +431,32 @@ public class PhotoService {
 					
 					NameCriteria nameCriteria = new NameCriteria();
 					nameCriteria.setDuplication(duplication);
-					nameCriteria.setNumbering(photo.getOriginalNumber() != null ? photo.getOriginalNumber() : criteria.isNumbering() ? String.valueOf(number++) : null);
+					
+					String numbering = null;
+					if(criteria.isNumbering() && renumbering) {
+						numbering = String.valueOf(number++);
+					} else if(photo.getOriginalNumber() != null) {
+						numbering = photo.getOriginalNumber();
+					} else if(criteria.isNumbering()) {
+						numbering = String.valueOf(number++);
+					}
+					nameCriteria.setNumbering(numbering);
 					nameCriteria.setSequence(criteria.isAutoSequence() ? sequence : null);
 					nameCriteria.setAppendOriginal(criteria.isAppendOriginal());
 					nameCriteria.setContainsExt(true);
 					String newName = getNewName(photo, nameCriteria);
 					
 					// rename
-					String newSource = criteria.isTest() ? originFile.getParent() + "\\" + newName : fileService.renameFile(photo.getSource(), newName);
-					info.getRenameSources().put(photo.getSource(), newSource);
-					photo.setSource(newSource);
-					
 					info.addCompletedPhotoCount();
-					log.info(info.getLog("renamed. -", "- " + Utils.skipDir(originFile.getParent(), info.getRootDirectory(), Constants.ROOT_DIRECTORY) + " - " + originFile.getName() +  " -> " + newName));
+					if(!Paths.get(photo.getSource()).getFileName().toString().equals(newName)) {
+						String newSource = criteria.isTest() ? originFile.getParent() + "\\" + newName : fileService.renameFile(photo.getSource(), newName);
+						info.getRenameSources().put(photo.getSource(), newSource);
+						photo.setSource(newSource);
+						
+						info.addRenamedPhotoCount();
+						log.info(info.getLog("renamed. -", "- " + Utils.skipDir(originFile.getParent(), info.getRootDirectory(), Constants.ROOT_DIRECTORY) + " - " + originFile.getName() +  " -> " + newName));
+					}
+					
 					
 					if(duplication) {
 						info.getDuplicatedSources().computeIfAbsent(uniqueNewName, k -> new ArrayList<>()).add(photo.getSource());

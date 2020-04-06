@@ -22,6 +22,11 @@ public class RenamePhotoInfo {
 	private Map<String, List<String>> mergedDirectories;
 	
 	/**
+	 * renumbered directory paths
+	 */
+	private List<String> renumberedDirectories;
+	
+	/**
 	 * before rename, after sources
 	 */
 	private Map<String, String> renameSources;
@@ -38,6 +43,8 @@ public class RenamePhotoInfo {
 	private int collectPhotoCount;
 	
 	private int completedPhotoCount;
+	
+	private int renamedPhotoCount;
 	
 	private String errorMessage;
 	
@@ -63,6 +70,14 @@ public class RenamePhotoInfo {
 	
 	public void setMergedDirectories(Map<String, List<String>> mergedDirectories) {
 		this.mergedDirectories = mergedDirectories;
+	}
+	
+	public List<String> getRenumberedDirectories() {
+		return renumberedDirectories;
+	}
+	
+	public void setRenumberedDirectories(List<String> renumberedDirectories) {
+		this.renumberedDirectories = renumberedDirectories;
 	}
 	
 	public Map<String, String> getRenameSources() {
@@ -137,6 +152,18 @@ public class RenamePhotoInfo {
 		completedPhotoCount++;
 	}
 	
+	public int getRenamedPhotoCount() {
+		return renamedPhotoCount;
+	}
+	
+	public void setRenamedPhotoCount(int renamedPhotoCount) {
+		this.renamedPhotoCount = renamedPhotoCount;
+	}
+	
+	public void addRenamedPhotoCount() {
+		renamedPhotoCount++;
+	}
+	
 	public String getLog(String prepend, String append) {
 		StringBuilder sb = new StringBuilder();
 		if(prepend != null) {
@@ -144,14 +171,16 @@ public class RenamePhotoInfo {
 			sb.append(" ");
 		}
 		
-		sb.append("readDir: ");
+		sb.append("dir: ");
 		sb.append(Utils.lPad(String.valueOf(readDirectoryCount), 2, " "));
-		sb.append(" / readPhoto: ");
+		sb.append(" / read: ");
 		sb.append(Utils.lPad(String.valueOf(readPhotoCount), 5, " "));
-		sb.append(" / collectPhoto: ");
+		sb.append(" / collect: ");
 		sb.append(Utils.lPad(String.valueOf(collectPhotoCount), 5, " "));
-		sb.append(" / renamePhoto: ");
+		sb.append(" / complete: ");
 		sb.append(Utils.lPad(String.valueOf(completedPhotoCount), 5, " "));
+		sb.append(" / renamed: ");
+		sb.append(Utils.lPad(String.valueOf(renamedPhotoCount), 5, " "));
 		
 		if(append != null) {
 			sb.append(" ");

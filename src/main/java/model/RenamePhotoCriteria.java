@@ -15,6 +15,11 @@ public class RenamePhotoCriteria {
 	private boolean numbering;
 	
 	/**
+	 * override renumbering folder names
+	 */
+	private List<String> renumberingDirectories;
+	
+	/**
 	 * append original file name or not
 	 */
 	private boolean appendOriginal;
@@ -48,6 +53,14 @@ public class RenamePhotoCriteria {
 	
 	public void setNumbering(boolean numbering) {
 		this.numbering = numbering;
+	}
+	
+	public List<String> getRenumberingDirectories() {
+		return renumberingDirectories;
+	}
+	
+	public void setRenumberingDirectories(List<String> renumberingDirectories) {
+		this.renumberingDirectories = renumberingDirectories;
 	}
 	
 	public boolean isAppendOriginal() {
