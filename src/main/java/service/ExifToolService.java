@@ -1,4 +1,4 @@
-package src.main.service;
+package service;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,11 +15,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import src.main.comm.Constants;
-import src.main.comm.CustomLogger;
-import src.main.model.Photo;
-import src.main.model.RenamePhotoInfo;
-import src.main.util.Utils;
+import comm.Constants;
+import comm.CustomLogger;
+import model.Photo;
+import model.RenamePhotoInfo;
+import util.Utils;
 
 public class ExifToolService {
 	private static final Logger log = CustomLogger.getGlobal();

@@ -1,4 +1,4 @@
-package src.main.comm;
+package comm;
 
 import java.time.Instant;
 import java.time.LocalDateTime;

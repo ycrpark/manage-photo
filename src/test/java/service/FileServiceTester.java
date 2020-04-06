@@ -1,12 +1,11 @@
-package src.test.service;
+package service;
 
 import java.io.IOException;
 import java.util.logging.Logger;
 
 import org.junit.Test;
 
-import src.main.comm.CustomLogger;
-import src.main.service.FileService;
+import comm.CustomLogger;
 
 public class FileServiceTester {
 	private static final Logger log = CustomLogger.getGlobal();

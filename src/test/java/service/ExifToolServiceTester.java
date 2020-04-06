@@ -1,6 +1,6 @@
-package src.test.service;
+package service;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,9 +11,8 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 
-import src.main.comm.CustomLogger;
-import src.main.model.Photo;
-import src.main.service.ExifToolService;
+import comm.CustomLogger;
+import model.Photo;
 
 public class ExifToolServiceTester {
 	private static final Logger log = CustomLogger.getGlobal();

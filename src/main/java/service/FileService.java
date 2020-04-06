@@ -1,4 +1,4 @@
-package src.main.service;
+package service;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,10 +9,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import src.main.comm.Constants;
-import src.main.comm.CustomLogger;
-import src.main.model.MoveFileInfo;
-import src.main.util.Utils;
+import comm.Constants;
+import comm.CustomLogger;
+import model.MoveFileInfo;
+import util.Utils;
 
 public class FileService {
 	private static final Logger log = CustomLogger.getGlobal();

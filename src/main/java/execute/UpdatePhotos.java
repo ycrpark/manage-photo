@@ -1,5 +1,5 @@
-package src.main.execute;
-import src.main.service.PhotoService;
+package execute;
+import service.PhotoService;
 
 public class UpdatePhotos {
 	public static PhotoService photoService = PhotoService.getInstance();

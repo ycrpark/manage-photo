@@ -1,4 +1,4 @@
-package src.main.service;
+package service;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,15 +22,15 @@ import java.util.Scanner;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import src.main.comm.Constants;
-import src.main.comm.CustomLogger;
-import src.main.comm.WindowsExplorerComparator;
-import src.main.model.NameCriteria;
-import src.main.model.Photo;
-import src.main.model.RenamePhotoCriteria;
-import src.main.model.RenamePhotoInfo;
-import src.main.model.UpdatePhotoInfo;
-import src.main.util.Utils;
+import comm.Constants;
+import comm.CustomLogger;
+import comm.WindowsExplorerComparator;
+import model.NameCriteria;
+import model.Photo;
+import model.RenamePhotoCriteria;
+import model.RenamePhotoInfo;
+import model.UpdatePhotoInfo;
+import util.Utils;
 
 public class PhotoService {
 	private static final Logger log = CustomLogger.getGlobal();

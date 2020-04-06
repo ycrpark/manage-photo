@@ -1,8 +1,9 @@
-package src.main.model;
+package model;
 
 import java.util.List;
 
-import src.main.util.Utils;
+import util.Utils;
+
 
 public class MoveFileInfo {
 	private String movePath;

@@ -1,4 +1,4 @@
-package src.main.model;
+package model;
 
 public class NameCriteria {
 	private boolean duplication;

@@ -1,5 +1,5 @@
-package src.main.execute;
-import src.main.service.FileService;
+package execute;
+import service.FileService;
 
 public class MoveFiles {
 	public static FileService fileService = FileService.getInstance();

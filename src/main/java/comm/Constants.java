@@ -1,4 +1,4 @@
-package src.main.comm;
+package comm;
 
 public class Constants {
 	public static final String ROOT_DIRECTORY = "ROOT";

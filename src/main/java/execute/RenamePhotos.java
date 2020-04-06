@@ -1,11 +1,11 @@
-package src.main.execute;
+package execute;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import src.main.model.RenamePhotoCriteria;
-import src.main.service.PhotoService;
+import model.RenamePhotoCriteria;
+import service.PhotoService;
 
 public class RenamePhotos {
 	public static PhotoService photoService = PhotoService.getInstance();
@@ -32,7 +32,7 @@ public class RenamePhotos {
 		maintainsNumberingDirectories.put("IMG_", Arrays.asList("동기스튜디오", "동기스튜디오 보정"));
 		criteria.setMaintainsNumberingDirectories(maintainsNumberingDirectories);
 		
-//		criteria.setTest(true);
+		criteria.setTest(true);
 		photoService.renamePhotos(source, criteria);
 	}
 }

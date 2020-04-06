@@ -1,12 +1,11 @@
-package src.test.service;
+package service;
 
 import java.util.logging.Logger;
 
 import org.junit.Test;
 
-import src.main.comm.CustomLogger;
-import src.main.model.RenamePhotoCriteria;
-import src.main.service.PhotoService;
+import comm.CustomLogger;
+import model.RenamePhotoCriteria;
 
 public class PhotoServiceTester {
 	private static final Logger log = CustomLogger.getGlobal();

@@ -1,4 +1,4 @@
-package src.main.util;
+package util;
 
 public class Utils {
 	public static String lPad(String value, int padSize, String pad) {
