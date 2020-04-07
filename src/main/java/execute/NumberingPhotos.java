@@ -17,14 +17,14 @@ public class NumberingPhotos {
 		// target directory paths
 		// If there are multiple, directories are integrated numbered
 		List<String> directories = new ArrayList<>();
-		directories.add("C:\\Users\\ycrpa\\Downloads\\test");
+		directories.add("C:\\Users\\ycrpa\\Downloads\\test\\동기스튜디오");
 //		directories.add("C:\\Users\\ycrpa\\GoogleDrive\\사진");
 		criteria.setDirectories(directories);
 		
 		// derived directory paths
 		// if same number with directories's file, numbered the same
 		List<String> derivedDirectories = new ArrayList<>();
-		derivedDirectories.add("C:\\Users\\ycrpa\\Downloads\\test");
+		derivedDirectories.add("C:\\Users\\ycrpa\\Downloads\\test\\동기스튜디오 보정");
 		criteria.setDerivedDirectories(derivedDirectories);
 		
 		// append original number or not

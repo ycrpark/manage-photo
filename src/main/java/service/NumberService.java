@@ -195,23 +195,21 @@ public class NumberService {
 		for(Numbering numbering : numberings) {
 			Integer newNumber = convertNumber != null ? convertNumber.get(numbering.getNumber()) : number++;
 			
-			StringBuilder sb = new StringBuilder();
-			sb.append(numbering.getPrefix());
-			sb.append(Utils.lPad(String.valueOf(newNumber), 5, "0"));
-			sb.append(numbering.getSuffix());
+			String newName = numbering.getPrefix() + Utils.lPad(String.valueOf(newNumber), 5, "0") + numbering.getSuffix();
+			String checkNewName = newName + Constants.MILLISEC_SEPARATOR + numbering.getExtension();
 			if(criteria.isAppendOriginal()) {
-				sb.append(Constants.NAME_SEPARATOR).append(numbering.getNumber());
+				newName += Constants.NAME_SEPARATOR + Utils.lPad(String.valueOf(numbering.getNumber()), 5, "0");
 			}
-			sb.append(Constants.MILLISEC_SEPARATOR).append(numbering.getExtension());
-			String newName = sb.toString();
+			newName += Constants.MILLISEC_SEPARATOR + numbering.getExtension();
 			
-			Path path = Paths.get(numbering.getSource());
 			if(info.isRenumberedOrigin()) {
 				info.addCompletedDerivedPhotoCount();
 			} else {
 				info.addCompletedPhotoCount();
 			}
-			if(!path.getFileName().toString().equals(newName)) {
+			
+			Path path = Paths.get(numbering.getSource());
+			if(!path.getFileName().toString().equals(checkNewName)) {
 				String newSource = criteria.isTest() ? path.getParent().toString() + "\\" + newName : fileService.renameFile(numbering.getSource(), newName);
 				info.getRenameSources().put(numbering.getSource(), newSource);
 				numbering.setSource(newSource);
