@@ -78,14 +78,10 @@ public class PhotoService {
 		try {
 			collectPhotos(source, criteria, info);
 			log.info(info.getLog("#####read and collet completed.#####", "#####read and collet completed.#####\n"));
-			if(info.getErrorMessage() == null) {
-				renamePhotos(criteria, info);
-				log.info(info.getLog("#####rename completed.#####", "#####rename completed.#####\n"));
-			}
 			
-			if(info.getErrorMessage() != null) {
-				log.severe(info.getErrorMessage());
-			}
+			renamePhotos(criteria, info);
+			log.info(info.getLog("#####rename completed.#####", "#####rename completed.#####\n"));
+			
 		} catch(Exception e) {
 			log.severe(e.toString());
 			e.printStackTrace();
@@ -155,8 +151,7 @@ public class PhotoService {
 				photo = exifToolService.getPhoto(target.getPath(), info);
 			} catch(IOException | InterruptedException e) {
 				log.severe("failed read metadata: " + target.getPath() + "\n" + e.toString());
-				info.setErrorMessage("failed read metadata. src: " + target.getPath());
-				return;
+				throw new RuntimeException("failed read metadata. src: " + target.getPath());
 			}
 			
 			String photosKey = target.getParent();
@@ -186,8 +181,7 @@ public class PhotoService {
 			photos = exifToolService.getPhotos(target.getPath(), info);
 		} catch(IOException | InterruptedException e) {
 			log.severe("failed read metadata: " + target.getPath() + "\n" + e.toString());
-			info.setErrorMessage("failed read metadata. src: " + target.getPath());
-			return;
+			throw new RuntimeException("failed read metadata. src: " + target.getPath());
 		}
 		
 		List<Photo> collectedPhotos = info.getPhotosMap().computeIfAbsent(target.getPath(), key -> new LinkedList<>());
@@ -466,8 +460,7 @@ public class PhotoService {
 					
 				} catch(IOException e) {
 					log.severe("failed rename: " + photo.getSource() + "\n" + e.toString());
-					info.setErrorMessage("failed rename: " + photo.getSource());
-					return;
+					throw new RuntimeException("failed rename: " + photo.getSource());
 				}
 			}
 		}

@@ -1,31 +1,10 @@
 package model;
 
-import java.util.List;
 import java.util.Map;
 
 import util.Utils;
 
 public class NumberingPhotoInfo {
-	/**
-	 * collected photos for numbering by folder
-	 */
-	private Map<String, List<Photo>> photosMap;
-	
-	/**
-	 * duplicate file names
-	 */
-	private Map<String, List<String>> duplicatedSources;
-	
-	/**
-	 * merged directory names
-	 */
-	private Map<String, List<String>> mergedDirectories;
-	
-	/**
-	 * renumbered directory paths
-	 */
-	private List<String> renumberedDirectories;
-	
 	/**
 	 * before rename, after sources
 	 */
@@ -50,38 +29,6 @@ public class NumberingPhotoInfo {
 	private boolean collectedOrigin;
 	
 	private boolean renumberedOrigin;
-	
-	public Map<String, List<Photo>> getPhotosMap() {
-		return photosMap;
-	}
-	
-	public void setPhotosMap(Map<String, List<Photo>> photosMap) {
-		this.photosMap = photosMap;
-	}
-	
-	public Map<String, List<String>> getDuplicatedSources() {
-		return duplicatedSources;
-	}
-	
-	public void setDuplicatedSources(Map<String, List<String>> duplicatedSources) {
-		this.duplicatedSources = duplicatedSources;
-	}
-	
-	public Map<String, List<String>> getMergedDirectories() {
-		return mergedDirectories;
-	}
-	
-	public void setMergedDirectories(Map<String, List<String>> mergedDirectories) {
-		this.mergedDirectories = mergedDirectories;
-	}
-	
-	public List<String> getRenumberedDirectories() {
-		return renumberedDirectories;
-	}
-	
-	public void setRenumberedDirectories(List<String> renumberedDirectories) {
-		this.renumberedDirectories = renumberedDirectories;
-	}
 	
 	public Map<String, String> getRenameSources() {
 		return renameSources;

@@ -7,6 +7,26 @@ import util.Utils;
 
 public class RenamePhotoInfo {
 	/**
+	 * collected photos for numbering by folder
+	 */
+	private Map<String, List<Photo>> photosMap;
+	
+	/**
+	 * duplicate file names
+	 */
+	private Map<String, List<String>> duplicatedSources;
+	
+	/**
+	 * merged directory names
+	 */
+	private Map<String, List<String>> mergedDirectories;
+	
+	/**
+	 * renumbered directory paths
+	 */
+	private List<String> renumberedDirectories;
+	
+	/**
 	 * before rename, after sources
 	 */
 	private Map<String, String> renameSources;
@@ -26,7 +46,37 @@ public class RenamePhotoInfo {
 	
 	private int renamedPhotoCount;
 	
-	private String errorMessage;
+	public Map<String, List<Photo>> getPhotosMap() {
+		return photosMap;
+	}
+	
+	public void setPhotosMap(Map<String, List<Photo>> photosMap) {
+		this.photosMap = photosMap;
+	}
+	
+	public Map<String, List<String>> getDuplicatedSources() {
+		return duplicatedSources;
+	}
+	
+	public void setDuplicatedSources(Map<String, List<String>> duplicatedSources) {
+		this.duplicatedSources = duplicatedSources;
+	}
+	
+	public Map<String, List<String>> getMergedDirectories() {
+		return mergedDirectories;
+	}
+	
+	public void setMergedDirectories(Map<String, List<String>> mergedDirectories) {
+		this.mergedDirectories = mergedDirectories;
+	}
+	
+	public List<String> getRenumberedDirectories() {
+		return renumberedDirectories;
+	}
+	
+	public void setRenumberedDirectories(List<String> renumberedDirectories) {
+		this.renumberedDirectories = renumberedDirectories;
+	}
 	
 	public Map<String, String> getRenameSources() {
 		return renameSources;
@@ -58,14 +108,6 @@ public class RenamePhotoInfo {
 	
 	public void setCompletedPhotoCount(int completedPhotoCount) {
 		this.completedPhotoCount = completedPhotoCount;
-	}
-	
-	public String getErrorMessage() {
-		return errorMessage;
-	}
-	
-	public void setErrorMessage(String errorMessage) {
-		this.errorMessage = errorMessage;
 	}
 	
 	public String getRootDirectory() {
