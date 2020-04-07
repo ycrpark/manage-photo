@@ -50,6 +50,8 @@ public class PhotoService {
 	
 	public static FileService fileService = FileService.getInstance();
 	
+	public static CommonService commonService = CommonService.getInstance();
+	
 	/**
 	 * rename the photo's file name to specified format
 	 * target is photo or all photos in a folder, inside folder...
@@ -130,7 +132,7 @@ public class PhotoService {
 		System.out.print("rollBack? (y/n): ");
 		try(Scanner sc = new Scanner(System.in)) {
 			if(sc.nextLine().toUpperCase().equals("Y")) {
-				rollbackRenames(info);
+				commonService.rollbackRenames(info.getRenameSources());
 			}
 		} catch(IOException e) {
 			log.severe(e.toString());
@@ -514,23 +516,6 @@ public class PhotoService {
 		}
 		
 		return newName.toString();
-	}
-	
-	private void rollbackRenames(RenamePhotoInfo info) throws IOException {
-		int completed = 0;
-		for(Entry<String, String> entry : info.getRenameSources().entrySet()) {
-			fileService.renameFile(entry.getValue(), Paths.get(entry.getKey()).getFileName().toString());
-			
-			
-			log.info("rollback. - total: " + Utils.lPad(String.valueOf(info.getRenameSources().size()), 5, " ")
-					+ " / completed: " + Utils.lPad(String.valueOf(++completed), 5, " ") + " - "
-					+ Utils.skipDir(Paths.get(entry.getValue()).getParent().toString(), info.getRootDirectory(), Constants.ROOT_DIRECTORY)
-					+ " - " + Paths.get(entry.getValue()).getFileName().toString() +  " -> " + Paths.get(entry.getKey()).getFileName().toString());
-		}
-		
-		log.info("");
-		log.info("rollback completed. - total: " + Utils.lPad(String.valueOf(info.getRenameSources().size()), 5, " ")
-				+ " / completed: " + Utils.lPad(String.valueOf(completed), 5, " "));
 	}
 	
 	/**

@@ -31,14 +31,7 @@ public class NumberingPhotoInfo {
 	 */
 	private Map<String, String> renameSources;
 	
-	/**
-	 * root path
-	 */
-	private String rootDirectory;
-	
 	private int readDirectoryCount;
-	
-	private int readPhotoCount;
 	
 	private int collectPhotoCount;
 	
@@ -46,7 +39,17 @@ public class NumberingPhotoInfo {
 	
 	private int renamedPhotoCount;
 	
-	private String errorMessage;
+	private int readDerivedDirectoryCount;
+	
+	private int collectDerivedPhotoCount;
+	
+	private int completedDerivedPhotoCount;
+	
+	private int renamedDerivedPhotoCount;
+	
+	private boolean collectedOrigin;
+	
+	private boolean renumberedOrigin;
 	
 	public Map<String, List<Photo>> getPhotosMap() {
 		return photosMap;
@@ -112,36 +115,8 @@ public class NumberingPhotoInfo {
 		this.completedPhotoCount = completedPhotoCount;
 	}
 	
-	public String getErrorMessage() {
-		return errorMessage;
-	}
-	
-	public void setErrorMessage(String errorMessage) {
-		this.errorMessage = errorMessage;
-	}
-	
-	public String getRootDirectory() {
-		return rootDirectory;
-	}
-	
-	public void setRootDirectory(String rootDirectory) {
-		this.rootDirectory = rootDirectory;
-	}
-	
-	public int getReadPhotoCount() {
-		return readPhotoCount;
-	}
-	
-	public void setReadPhotoCount(int readPhotoCount) {
-		this.readPhotoCount = readPhotoCount;
-	}
-	
 	public void addReadDirectoryCount() {
 		readDirectoryCount++;
-	}
-	
-	public void addReadPhotoCount() {
-		readPhotoCount++;
 	}
 	
 	public void addCollectPhotoCount() {
@@ -164,6 +139,70 @@ public class NumberingPhotoInfo {
 		renamedPhotoCount++;
 	}
 	
+	public int getReadDerivedDirectoryCount() {
+		return readDerivedDirectoryCount;
+	}
+	
+	public void setReadDerivedDirectoryCount(int readDerivedDirectoryCount) {
+		this.readDerivedDirectoryCount = readDerivedDirectoryCount;
+	}
+	
+	public void addReadDerivedDirectoryCount() {
+		readDerivedDirectoryCount++;
+	}
+	
+	public int getCollectDerivedPhotoCount() {
+		return collectDerivedPhotoCount;
+	}
+	
+	public void setCollectDerivedPhotoCount(int collectDerivedPhotoCount) {
+		this.collectDerivedPhotoCount = collectDerivedPhotoCount;
+	}
+	
+	public void addCollectDerivedPhotoCount() {
+		collectDerivedPhotoCount++;
+	}
+	
+	public int getCompletedDerivedPhotoCount() {
+		return completedDerivedPhotoCount;
+	}
+	
+	public void setCompletedDerivedPhotoCount(int completedDerivedPhotoCount) {
+		this.completedDerivedPhotoCount = completedDerivedPhotoCount;
+	}
+	
+	public void addCompletedDerivedPhotoCount() {
+		completedDerivedPhotoCount++;
+	}
+	
+	public int getRenamedDerivedPhotoCount() {
+		return renamedDerivedPhotoCount;
+	}
+	
+	public void setRenamedDerivedPhotoCount(int renamedDerivedPhotoCount) {
+		this.renamedDerivedPhotoCount = renamedDerivedPhotoCount;
+	}
+	
+	public void addRenamedDerivedPhotoCount() {
+		renamedDerivedPhotoCount++;
+	}
+	
+	public boolean isCollectedOrigin() {
+		return collectedOrigin;
+	}
+	
+	public void setCollectedOrigin(boolean collectedOrigin) {
+		this.collectedOrigin = collectedOrigin;
+	}
+	
+	public boolean isRenumberedOrigin() {
+		return renumberedOrigin;
+	}
+	
+	public void setRenumberedOrigin(boolean renumberedOrigin) {
+		this.renumberedOrigin = renumberedOrigin;
+	}
+	
 	public String getLog(String prepend, String append) {
 		StringBuilder sb = new StringBuilder();
 		if(prepend != null) {
@@ -173,14 +212,20 @@ public class NumberingPhotoInfo {
 		
 		sb.append("dir: ");
 		sb.append(Utils.lPad(String.valueOf(readDirectoryCount), 2, " "));
-		sb.append(" / read: ");
-		sb.append(Utils.lPad(String.valueOf(readPhotoCount), 5, " "));
 		sb.append(" / collect: ");
 		sb.append(Utils.lPad(String.valueOf(collectPhotoCount), 5, " "));
 		sb.append(" / complete: ");
 		sb.append(Utils.lPad(String.valueOf(completedPhotoCount), 5, " "));
 		sb.append(" / renamed: ");
 		sb.append(Utils.lPad(String.valueOf(renamedPhotoCount), 5, " "));
+		sb.append(" // dir: ");
+		sb.append(Utils.lPad(String.valueOf(readDerivedDirectoryCount), 2, " "));
+		sb.append(" / collect: ");
+		sb.append(Utils.lPad(String.valueOf(collectDerivedPhotoCount), 5, " "));
+		sb.append(" / complete: ");
+		sb.append(Utils.lPad(String.valueOf(completedDerivedPhotoCount), 5, " "));
+		sb.append(" / renamed: ");
+		sb.append(Utils.lPad(String.valueOf(renamedDerivedPhotoCount), 5, " "));
 		
 		if(append != null) {
 			sb.append(" ");

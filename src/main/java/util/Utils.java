@@ -1,14 +1,5 @@
 package util;
 
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-
-import comm.Constants;
-import model.Photo;
-
 public class Utils {
 	public static String lPad(String value, int padSize, String pad) {
 		if(value == null) {
@@ -65,25 +56,5 @@ public class Utils {
 	
 	public static boolean validDateText(String text) {
 		return text != null && !text.equals("0000:00:00 00:00:00");
-	}
-	
-	public static Integer getNumbering(String source) {
-		try {
-			source = Paths.get(source).getFileName().toString();
-			
-			if(source.length() >= 37 && source.indexOf(Constants.NAME_SEPARATOR) == 8 && source.indexOf(Constants.MILLISEC_SEPARATOR) == 15
-					&& (source.indexOf("+") == 20 || source.indexOf("-") == 20)) {
-				// photoSync contains offset format
-				ZonedDateTime.parse(source.substring(0, 25), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT_CONTAINS_OFFSET));
-				return Integer.parseInt(source.substring(32, 37));
-			} else if(source.length() >= 31 && source.indexOf(Constants.NAME_SEPARATOR) == 8 && source.indexOf(Constants.MILLISEC_SEPARATOR) == 15) {
-				// photoSync format
-				LocalDateTime.parse(source.substring(0, 19), DateTimeFormatter.ofPattern(Constants.DATETIME_FORMAT));
-				return Integer.parseInt(source.substring(26, 31));
-			}
-		} catch(Exception e) {
-		}
-		
-		return null;
 	}
 }

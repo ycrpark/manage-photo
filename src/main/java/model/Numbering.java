@@ -9,6 +9,8 @@ public class Numbering {
 	
 	private String suffix;
 	
+	private String extension;
+	
 	public String getSource() {
 		return source;
 	}
@@ -39,6 +41,14 @@ public class Numbering {
 	
 	public void setSuffix(String suffix) {
 		this.suffix = suffix;
+	}
+	
+	public String getExtension() {
+		return extension;
+	}
+	
+	public void setExtension(String extension) {
+		this.extension = extension;
 	}
 	
 }
