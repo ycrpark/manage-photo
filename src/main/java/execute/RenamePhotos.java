@@ -22,21 +22,30 @@ public class RenamePhotos {
 	 */
 	public static void main(String[] args) {
 		// photo file or directory path
-		String source = "C:\\Users\\ycrpa\\Downloads\\test";
-//		String source = "C:\\Users\\ycrpa\\GoogleDrive\\사진";
+//		String source = "C:\\Users\\pp75362\\Desktop\\촬영\\작업1";
+//		String source = "D:\\GoogleDrive\\사진";
+		String source = "D:\\GoogleDrive\\사진\\웨딩촬영보정";
 //		String source = "C:\\Users\\ycrpa\\Downloads\\test\\20191016_155250.010_00001_00000.CR2";
 		
 		RenamePhotoCriteria criteria = new RenamePhotoCriteria();
 		// auto sequencing
 		// if false, append original file name to the rename file name
 		criteria.setAutoSequence(true);
+
+		// add base sequence at folder
+		criteria.setBaseAutoSequences(Map.ofEntries(
+				Map.entry("웨딩촬영", 1),
+				Map.entry("웨딩촬영보정", 2),
+				Map.entry("웨딩촬영보정기타", 3)
+		));
 		
 		// auto numbering by folder. if false, number is 00000
 		criteria.setNumbering(true);
 		
 		// override new numbering folder names
-//		criteria.setRenumberingDirectories(Arrays.asList("곰"));
-		
+//		criteria.setRenumberingDirectories(Arrays.asList("결혼식스냅", "결혼식스냅보정"));
+		criteria.setRenumberingDirectories(Arrays.asList(""));
+
 		// append original file name at rename file name
 //		criteria.setAppendOriginal(true);
 		
@@ -49,13 +58,13 @@ public class RenamePhotos {
 		// ex) if key is "IMG_", "IMG_0032.jpg" -> 20200403-174504.357-00001-00032.jpg
 		// ex) if key is "IMG_", "IMG_0032-abc.jpg" -> 20200403-174504.357-00001-00032-abc.jpg
 		Map<String, List<String>> maintainsNumberingDirectories = new HashMap<>();
-		maintainsNumberingDirectories.put("KAWA", null);
-		maintainsNumberingDirectories.put("IMG_", Arrays.asList("동기스튜디오", "동기스튜디오 보정"));
+//		maintainsNumberingDirectories.put("KAWA", null);
+//		maintainsNumberingDirectories.put("IMG_", Arrays.asList("동기스튜디오", "동기스튜디오 보정"));
 		criteria.setMaintainsNumberingDirectories(maintainsNumberingDirectories);
 		
 		// if true, file name is not changed
 		criteria.setTest(true);
-		
+
 		photoService.renamePhotos(source, criteria);
 	}
 }
