@@ -7,19 +7,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NumberingPhotos {
-	public static NumberService numberService = NumberService.getInstance();
-	
-	/**
-	 * renumbering photos
-	 */
-	public static void main(String[] args) {
-		NumberingPhotoCriteria criteria = new NumberingPhotoCriteria();
-		
-		// target directory paths
-		// If there are multiple, directories are integrated numbered
-		List<String> directories = new ArrayList<>();
+    public static NumberService numberService = NumberService.getInstance();
+
+    /**
+     * renumbering photos
+     */
+    public static void main(String[] args) {
+        NumberingPhotoCriteria criteria = new NumberingPhotoCriteria();
+
+        // target directory paths
+        // If there are multiple, directories are integrated numbered
+        List<String> directories = new ArrayList<>();
 //		directories.add("C:\\Users\\ycrpa\\Downloads\\test\\동기스튜디오");
-		
+
 //		directories.add("C:\\Users\\ycrpa\\GoogleDrive\\사진\\웨딩촬영 RAW");
 
 
@@ -64,17 +64,17 @@ public class NumberingPhotos {
 
 
 //		directories.add("D:\\GoogleDrive\\사진\\개포");
-		directories.add("D:\\GoogleDrive\\사진\\카메라");
+        directories.add("D:\\GoogleDrive\\사진\\카메라");
 //		directories.add("C:\\Users\\pp75362\\Desktop\\새 폴더 (2)\\학교기타");
 
-		
-		criteria.setDirectories(directories);
-		
-		// derived directory paths
-		// if same number with directories's file, numbered the same
-		List<String> derivedDirectories = new ArrayList<>();
+
+        criteria.setDirectories(directories);
+
+        // derived directory paths
+        // if same number with directories's file, numbered the same
+        List<String> derivedDirectories = new ArrayList<>();
 //		derivedDirectories.add("C:\\Users\\ycrpa\\Downloads\\test\\동기스튜디오 보정");
-		
+
 //		derivedDirectories.add("C:\\Users\\ycrpa\\GoogleDrive\\사진\\웨딩촬영");
 //		derivedDirectories.add("C:\\Users\\ycrpa\\GoogleDrive\\사진\\웨딩촬영 보정");
 //		derivedDirectories.add("C:\\Users\\ycrpa\\GoogleDrive\\사진\\웨딩촬영 보정기타");
@@ -90,14 +90,14 @@ public class NumberingPhotos {
 //		derivedDirectories.add("D:\\GoogleDrive\\사진\\웨딩촬영보정기타");
 
 
-		criteria.setDerivedDirectories(derivedDirectories);
-		
-		// append original number or not
+        criteria.setDerivedDirectories(derivedDirectories);
+
+        // append original number or not
 //		criteria.setAppendOriginal(true);
-		
-		// if true, file name is not changed
-		criteria.setTest(true);
-		
-		numberService.numberingPhotos(criteria);
-	}
+
+        // if true, file name is not changed
+        criteria.setTest(true);
+
+        numberService.numberingPhotos(criteria);
+    }
 }
