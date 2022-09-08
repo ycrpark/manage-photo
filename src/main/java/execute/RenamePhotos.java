@@ -1,11 +1,12 @@
 package execute;
+
+import model.RenamePhotoCriteria;
+import service.PhotoService;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import model.RenamePhotoCriteria;
-import service.PhotoService;
 
 public class RenamePhotos {
 	public static PhotoService photoService = PhotoService.getInstance();

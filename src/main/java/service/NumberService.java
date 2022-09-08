@@ -1,5 +1,13 @@
 package service;
 
+import comm.Constants;
+import comm.CustomLogger;
+import comm.WindowsExplorerComparator;
+import model.Numbering;
+import model.NumberingPhotoCriteria;
+import model.NumberingPhotoInfo;
+import util.Utils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -9,23 +17,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import comm.Constants;
-import comm.CustomLogger;
-import comm.WindowsExplorerComparator;
-import model.Numbering;
-import model.NumberingPhotoCriteria;
-import model.NumberingPhotoInfo;
-import util.Utils;
 
 public class NumberService {
 	private static final Logger log = CustomLogger.getGlobal();

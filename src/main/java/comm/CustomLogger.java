@@ -4,11 +4,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Formatter;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
 public class CustomLogger {
 	

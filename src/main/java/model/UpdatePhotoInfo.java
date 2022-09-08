@@ -1,8 +1,8 @@
 package model;
 
-import java.util.List;
-
 import util.Utils;
+
+import java.util.List;
 
 public class UpdatePhotoInfo {
 	/**

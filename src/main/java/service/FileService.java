@@ -1,5 +1,10 @@
 package service;
 
+import comm.Constants;
+import comm.CustomLogger;
+import model.MoveFileInfo;
+import util.Utils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
@@ -8,11 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.logging.Logger;
-
-import comm.Constants;
-import comm.CustomLogger;
-import model.MoveFileInfo;
-import util.Utils;
 
 public class FileService {
 	private static final Logger log = CustomLogger.getGlobal();

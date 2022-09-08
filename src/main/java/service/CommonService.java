@@ -1,13 +1,13 @@
 package service;
 
+import comm.CustomLogger;
+import util.Utils;
+
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
-
-import comm.CustomLogger;
-import util.Utils;
 
 public class CommonService {
 	private static final Logger log = CustomLogger.getGlobal();

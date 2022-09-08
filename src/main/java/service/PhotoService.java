@@ -1,36 +1,20 @@
 package service;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Scanner;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
 import comm.Constants;
 import comm.CustomLogger;
 import comm.WindowsExplorerComparator;
-import model.NameCriteria;
-import model.Photo;
-import model.RenamePhotoCriteria;
-import model.RenamePhotoInfo;
-import model.UpdatePhotoInfo;
+import model.*;
 import util.Utils;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class PhotoService {
 	private static final Logger log = CustomLogger.getGlobal();

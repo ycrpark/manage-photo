@@ -1,8 +1,8 @@
 package model;
 
-import java.util.Map;
-
 import util.Utils;
+
+import java.util.Map;
 
 public class NumberingPhotoInfo {
 	/**

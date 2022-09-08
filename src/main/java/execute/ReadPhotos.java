@@ -1,10 +1,11 @@
 package execute;
-import java.util.List;
-import java.util.logging.Logger;
 
 import comm.CustomLogger;
 import model.Photo;
 import service.ExifToolService;
+
+import java.util.List;
+import java.util.logging.Logger;
 
 public class ReadPhotos {
 	private static final Logger log = CustomLogger.getGlobal();

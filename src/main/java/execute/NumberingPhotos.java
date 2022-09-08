@@ -1,10 +1,10 @@
 package execute;
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 
 import model.NumberingPhotoCriteria;
 import service.NumberService;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class NumberingPhotos {
 	public static NumberService numberService = NumberService.getInstance();

@@ -1,5 +1,11 @@
 package service;
 
+import comm.Constants;
+import comm.CustomLogger;
+import model.Photo;
+import model.RenamePhotoInfo;
+import util.Utils;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -7,19 +13,8 @@ import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
-
-import comm.Constants;
-import comm.CustomLogger;
-import model.Photo;
-import model.RenamePhotoInfo;
-import util.Utils;
 
 public class ExifToolService {
 	private static final Logger log = CustomLogger.getGlobal();
