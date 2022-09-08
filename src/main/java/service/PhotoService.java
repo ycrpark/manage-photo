@@ -59,7 +59,6 @@ public class PhotoService {
 	 * 
 	 * @param source
 	 * photo or directory path
-	 * @param numbering
 	 * numbering or not
 	 */
 	public void renamePhotos(String source, RenamePhotoCriteria criteria) {
@@ -424,6 +423,9 @@ public class PhotoService {
 					
 					boolean duplication = newNameCounts.get(uniqueNewName).size() > 1;
 					int sequence = newNameCounts.get(uniqueNewName).indexOf(photo.getSource()) + 1;
+					if (criteria.getBaseAutoSequences() != null && criteria.getBaseAutoSequences().get(folderName) != null) {
+						sequence += criteria.getBaseAutoSequences().get(folderName);
+					}
 					
 					NameCriteria nameCriteria = new NameCriteria();
 					nameCriteria.setDuplication(duplication);
@@ -470,9 +472,7 @@ public class PhotoService {
 	 * get new file name
 	 * 
 	 * @param photo
-	 * @param number
 	 * nullable 00000
-	 * @param sequence
 	 * if duplication append orignal file name
 	 * @return
 	 */

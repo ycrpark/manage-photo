@@ -8,6 +8,11 @@ public class RenamePhotoCriteria {
 	 * do auto sequencing or not
 	 */
 	private boolean autoSequence;
+
+	/**
+	 * add number at autoSequence. by folder name
+	 */
+	private Map<String, Integer> baseAutoSequences;
 	
 	/**
 	 * do numbering or not
@@ -46,7 +51,15 @@ public class RenamePhotoCriteria {
 	public void setAutoSequence(boolean autoSequence) {
 		this.autoSequence = autoSequence;
 	}
-	
+
+	public Map<String, Integer> getBaseAutoSequences() {
+		return baseAutoSequences;
+	}
+
+	public void setBaseAutoSequences(Map<String, Integer> baseAutoSequences) {
+		this.baseAutoSequences = baseAutoSequences;
+	}
+
 	public boolean isNumbering() {
 		return numbering;
 	}
