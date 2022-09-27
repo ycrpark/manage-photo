@@ -145,7 +145,7 @@ public class ExifToolService {
         }
 
         // TODO exist not supported datetimeoriginal
-        List<String> dateCommands = Arrays.asList("datetimeoriginal", "CreateDate", "ModifyDate", "FileCreateDate", "FileModifyDate");
+        List<String> dateCommands = Arrays.asList("datetimeoriginal", "subsecdatetimeoriginal", "CreateDate", "ModifyDate", "FileCreateDate", "FileModifyDate");
         for (String dateCommand : dateCommands) {
             commands.add("\"-" + dateCommand + "=" + dateTime + "\"");
 //			commands.add("\"-" + dateCommand + "=");
