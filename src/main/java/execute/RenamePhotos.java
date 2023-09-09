@@ -24,8 +24,8 @@ public class RenamePhotos {
     public static void main(String[] args) {
         // photo file or directory path
 //		String source = "C:\\Users\\pp75362\\Desktop\\촬영\\작업1";
-//		String source = "D:\\GoogleDrive\\사진";
-        String source = "D:\\GoogleDrive\\사진\\웨딩촬영보정";
+		String source = "D:\\GoogleDrive\\사진";
+//        String source = "D:\\GoogleDrive\\사진\\웨딩촬영보정";
 //		String source = "C:\\Users\\ycrpa\\Downloads\\test\\20191016_155250.010_00001_00000.CR2";
 
         RenamePhotoCriteria criteria = new RenamePhotoCriteria();
@@ -36,8 +36,8 @@ public class RenamePhotos {
         // add base sequence at folder
         criteria.setBaseAutoSequences(Map.ofEntries(
                 Map.entry("웨딩촬영", 1),
-                Map.entry("웨딩촬영보정", 2),
-                Map.entry("웨딩촬영보정기타", 3)
+                Map.entry("웨딩촬영보정", 1),
+                Map.entry("웨딩촬영보정기타", 1)
         ));
 
         // auto numbering by folder. if false, number is 00000
@@ -45,7 +45,30 @@ public class RenamePhotos {
 
         // override new numbering folder names
 //		criteria.setRenumberingDirectories(Arrays.asList("결혼식스냅", "결혼식스냅보정"));
-        criteria.setRenumberingDirectories(Arrays.asList(""));
+        criteria.setRenumberingDirectories(Arrays.asList(
+			"가족",
+			"가족다낭",
+			"개포",
+			"개포기타",
+			"결혼식",
+//			"결혼식스냅",
+//			"결혼식스냅보정",
+			"곰",
+			"곰곰",
+			"곰곰곰",
+			"곰요리",
+			"라인",
+			"백업",
+			"보관",
+			"신혼여행",
+//			"웨딩촬영",
+//			"웨딩촬영보정",
+//			"웨딩촬영보정기타",
+			"카메라",
+			"푸켓",
+			"학교",
+			"학교기타"
+		));
 
         // append original file name at rename file name
 //		criteria.setAppendOriginal(true);
