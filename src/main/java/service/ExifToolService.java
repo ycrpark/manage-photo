@@ -20,7 +20,7 @@ public class ExifToolService {
     private static final Logger log = CustomLogger.getGlobal();
 
     // exiftool.exe path
-    private final String appSource = "C:\\exiftool.exe";
+    private final String appSource = ".\\external\\exiftool.exe";
     private final String charset = "EUC-KR";
 
     private ExifToolService() {
